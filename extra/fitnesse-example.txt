@@ -1,0 +1,432 @@
+|check|''occupant count''|lotr|0|
+public int occupantCount(String roomName) {
+   return chat.occupants(roomName);
+}
+
+|error|......
+
+|reject|''remove''|lotr|''room''|
+public boolean removeRoom(String roomName) {
+
+
+
+
+|!-rent.StartApplication-!|
+
+|''setup''|
+|''rental item name''|''count''|''$/hour''|''$/day''|''$/week''|''deposit''|
+|coffee dispenser|10|1.50|8.20|60.00|0.00|
+|hot water dispenser|12|1.50|8.00|50.00|0.00|
+|cup|500|0.05|0.45|2.00|0.10|
+
+|''setup''|
+|''client name''|''phone''|''account limit''|
+|Joanna|373 7599|0.00|
+
+|''setup''|
+|''staff name''|''phone''|
+|Bill|555 9876|
+
+|''time is now''| 2004/05/06 09:01|
+!3 ''Rental of cups for 2 weeks:''
+|''begin transaction for client''| Joanna |''staff''| Bill|
+|''rent''|100||cup|''for''|2|''weeks''|
+|''pay with cash $''|410.00|
+|''complete transaction''|
+ * ''Checks''
+|''rentals of client''|Joanna|
+|''rental item''|''count''|''start date''|''end date''|
+|cup|100|2004/05/06 09:01|2004/05/20 09:01|
+
+|''rental item subset''|
+|''name''|''count''|
+|cup|400|
+
+
+
+
+|!-rent.StartApplication-!|
+
+|''setup''|
+|''rental item name''|''count''|''$/hour''|''$/day''|''$/week''|''deposit''|
+|coffee dispenser|10|1.50|8.20|60.00|0.00|
+|hot water dispenser|12|1.50|8.00|50.00|0.00|
+|cup|500|0.05|0.45|2.00|0.10|
+
+|''setup''|
+|''client name''|''phone''|
+|Joanna|373 7599|
+
+|''setup''|
+|''staff name''|''phone''|
+|Bill|555 9876|
+
+|''time is now''| 2004/05/06 09:01|
+
+|''set up rentals''|Joanna|
+|''rental item''|''count''|''start date''|''end date''|
+|cup|100|2004/05/06 09:01|2004/05/07 09:01|
+
+|''time is now''|2004/05/07 08:01|
+
+|''begin transaction for client''| Joanna |''staff''| Bill|
+|''return items''|100||cup|
+|''refund cash $''|10.00|
+|''complete transaction''|
+
+|''rentals of client''|Joanna|
+|''rental item''|
+
+|''rental item subset''|
+|''name''|''count''|
+|cup|500|
+
+
+
+
+package rent;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+
+import prs.*;
+
+import fitlibrary.ArrayFixture;
+import fitlibrary.DoFixture;
+import fit.Fixture;
+import fitlibrary.SetFixture;
+import fitlibrary.SetUpFixture;
+import fitlibrary.SubsetFixture;
+
+public class StartApplication extends DoFixture { 
+    private final MockClock mockClock = new MockClock();  
+    private final DateFormat dateFormat 
+    	= new SimpleDateFormat("yyyy/MM/dd HH:mm"); 
+    private RentEz rentEz; 
+    private GeneralSetUpFixture setUp; 
+    
+    public StartApplication() throws Exception { 
+        rentEz = new RentEz(mockClock);  
+        /*
+        rentEz = new RentEz();  
+         */
+        setUp = new GeneralSetUpFixture(rentEz); 
+        // ...  
+        registerParseDelegate(Date.class,dateFormat); 
+    } 
+    public Fixture setup() { 
+        return setUp; 
+    } 
+    public Fixture enterStaff() {
+        return setUp;
+    }
+    public Fixture staffList() {
+        ArrayList staffMembers = new ArrayList();
+        for (Iterator it = rentEz.getStaffMembers(); it.hasNext();) {
+            prs.StaffMember staff = (prs.StaffMember) it.next();
+            if (!(staff.getName().equals("Admin")))
+                staffMembers.add(staff);
+        }
+        return new SetFixture(staffMembers);
+    }
+    public Fixture enterClients() {
+        return setUp;
+    }
+    public Fixture clientList() {
+        return new SetFixture(rentEz.getClients());
+    }
+    public Fixture client(String clientName) throws MissingException {
+        return new ClientFixture(getClient(clientName));
+    }
+    public Fixture enterRentalItemTypes() {
+        return setUp;
+    }
+    public Fixture rentalItemList() {
+        return new SetFixture(mapRentalItemsToAdapter());
+    }
+    public Fixture rentalItemSubset() {
+        return new SubsetFixture(mapRentalItemsToAdapter());
+    }
+    private ArrayList mapRentalItemsToAdapter() {
+        ArrayList hireItemTypes = new ArrayList();
+        for (Iterator it = rentEz.getHireItemTypes(); it.hasNext(); ) {
+            prs.RentalItemType hireItemType = (prs.RentalItemType)it.next();
+            hireItemTypes.add(new RentalItemAdapter(hireItemType));
+        }
+        return hireItemTypes;
+    }
+    public Fixture identifiedRentalItemSubset() {
+        return new SubsetFixture(rentEz.getAllIdentifedHireItems());
+    }
+    public Fixture enterBuyItemTypes() {
+        return setUp;
+    }
+    public Fixture rentalsOfClient(String clientName) throws MissingException {
+        return new ArrayFixture(getClient(clientName).getHires());
+//        return new SetFixture(getClient(clientName).getHires());
+    }
+    public Fixture beginTransactionForClientStaff(String clientName,  
+            String staffMemberName) throws MissingException {  
+        ClientTransaction transaction = rentEz.beginClientTransaction( 
+                clientName,staffMemberName);  
+        return new TransActionFixture(rentEz,transaction); 
+    } 
+    public Fixture beginAdminTransaction(String staffMemberName) throws Exception {
+        return new AdminTransAction(rentEz.beginAdminTransaction(staffMemberName),rentEz);
+    }
+    public boolean timeIsNow(Date time) {  
+        mockClock.setTime(time);  
+        return true;  
+    }  
+    public Fixture forMaintenanceList() {
+        return new SetFixture(rentEz.forMaintenance());
+    }
+    public Fixture clientBookingList(String clientName) throws MissingException {
+        return new SetFixture(getClient(clientName).getBookings());
+    }
+    public Fixture salesGoodsSubset() {
+        return new SubsetFixture(rentEz.getBuyItems());
+    }
+    public Fixture calculateChargeFairlyPerHourPerDay(Money perHour, Money perDay) {
+        return new CalculateChargeFairly(new Rates(perHour,perDay,new Money()));
+    }
+    public Fixture calculateChargeFairlyPerDayPerWeek(Money perDay, Money perWeek) {
+        return new CalculateChargeFairly(new Rates(new Money(),perDay,perWeek));
+    }
+    public Fixture setUpRentals(String name) throws Exception {
+        return new SetUpRentals(name);
+    }
+    public class SetUpRentals extends SetUpFixture {
+        private ClientTransaction clientTransaction;
+        private Money cost = new Money();
+        
+        public SetUpRentals(String clientName) throws Exception {
+            clientTransaction = rentEz.beginClientTransaction(clientName,"Admin");
+        }
+        public void rentalItemCountStartDateEndDate(String name, int count, Date start, Date end) throws Exception {
+            Duration duration = Duration.createDuration(start,end);
+            Money hireCost = clientTransaction.rent(count,rentEz.getRentalItemType(name),duration);
+            cost = cost.plus(hireCost);
+        }
+        public void tearDown() throws Exception {
+            clientTransaction.payCash(cost);
+            if (!clientTransaction.complete())
+                throw new RuntimeException("Unable to complete");
+        }
+    }
+    //... 
+    /** Rental for a client set up 
+     * @throws MissingException*/
+    public Fixture rentalsForClient(String clientName)
+    		throws MissingException {
+        return new RentalEntryFixture(rentEz,makeDummyStaff(),
+                rentEz.getClient(clientName));
+    }
+    public Fixture refundDollarPerHourPerDayPerWeek(Money perHour, 
+            Money perDay, Money perWeek) throws Exception { 
+        StaffMember staff = makeDummyStaff(); 
+        Client client = makeDummyClient(); 
+        RentalItemType item = makeDummyRentalItem( 
+                new Rates(perHour, perDay, perWeek)); 
+        return new Refunder(rentEz,staff,client,item.getName()); 
+        //	    return new Refund(perHour,perDay,perWeek);
+    } 
+    private RentalItemType makeDummyRentalItem(Rates rates) { 
+        final String name = "dummy-rental"; 
+        final int count = 1; 
+        final Money bond = new Money(0); 
+        rentEz.removeRentalItemType(name); 
+        rentEz.createRentalItemType(name,count,rates,bond); 
+        return rentEz.getRentalItemType(name); 
+    } 
+    private Client makeDummyClient() throws RpsException { 
+        final String name = "dummy-client"; 
+        try { 
+            return getClient(name); 
+        } catch (MissingException e) { 
+            rentEz.createClient(rentEz.getAdminStaff(), name, "phone"); 
+            return getClient(name); 
+        } 
+    } 
+    private StaffMember makeDummyStaff() throws MissingException { 
+        final String name = "dummy-staff"; 
+        try { 
+            return rentEz.getStaffMember(name); 
+        } catch (MissingException e) { 
+            rentEz.createStaffMember(rentEz.getAdminStaff(), 
+            		name,"phone"); 
+            return rentEz.getStaffMember(name); 
+        } 
+    } 
+    private Client getClient(String clientName) throws MissingException {
+        return rentEz.getClient(clientName);
+    }
+    public class Refund extends fitlibrary.CalculateFixture {
+        private Rates rates;
+        
+        public Refund(Money perHour, Money perDay, Money perWeek) {
+            rates = new Rates(perHour,perDay,perWeek);
+        }
+        public Money refundPaidTimeActualTime(Duration paid, Duration actual) {
+            return rates.forPeriod(paid).minus(rates.forPeriod(actual));
+        }
+    }
+    // ...  
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!|rent.CalculateRefund2|
+
+|''refund $''|5.00|''per hour''|45.00|''per day''|200.00|''per week''|
+|''paid time''|''actual time''||''refund''|
+|3 hours|3 hours||0.00|
+|3 hours|2 hours||5.00|
+|5 hours|1 hours||20.00|
+
+
+public class CalculateRefund2 extends fitlibrary.DoFixture {
+        public Fixture refundDollarPerHourPerDayPerWeek(Rates rates) {
+                return new Refund(rates);
+        }
+        public Fixture refundDollarPerHourPerDayPerWeek(Money hourly, Money dail
+y, Money weekly) {
+                return new Refund(new Rates(hourly,daily,weekly));
+        }
+        public class Refund extends fitlibrary.CalculateFixture {
+                private Rates rates;
+
+                public Refund(Rates rates) {
+                        this.rates = rates;
+                }
+                public Money refundPaidTimeActualTime(Duration paid, Duration ac
+tual) {
+                        return rates.forPeriod(paid).minus(rates.forPeriod(actua
+l));
+                }
+                public Object parse(String s, Class type) throws Exception {
+                        if (type == Duration.class)
+                            return Duration.parse(s);
+                        return super.parse(s, type);
+                }
+        }
+}
+
+
+
+
+
+
+
+
+|''rate $''|5.00|''/hour''|45.00|''/day''|200.00|''/week''|
+|''hours1''|''hours2''|''refund()''|
+|3|3|0.00|
+|3|2|5.00|
+|5|1|20.00|
+
+public class CalculateRefund extends fitlibrary.DoFixture {
+        public Fixture rateDollarSlashHourSlashDaySlashWeek(double perHour, doub
+le perDay, double perWeek) {
+                return new Refund(perHour,perDay,perWeek);
+        }
+        public class Refund extends fit.ColumnFixture {
+                public int hours1, days1, weeks1;
+                public int hours2, days2, weeks2;
+                private FairChargeWithColumn charge1, charge2;
+
+                public Refund(double perHour, double perDay, double perWeek) {
+                        charge1 = new FairChargeWithColumn(perHour,perDay,perWee
+k);
+                        charge2 = new FairChargeWithColumn(perHour,perDay,perWee
+k);
+                }
+                public double refund() {
+                        return charge1.refund(hours1,days1,weeks1) - charge2.ref
+und(hours2,days2,weeks2);
+                }
+        }
+}
+
+
+
+
+
+
+
+
+|!-fit.ActionFixture-!|
+|start|!-BuyActions-!|
+|check|total|00.00|
+|enter|price|12.00|
+|press|buy|
+|check|total|12.00|
+|enter|price|100.00|
+|press|buy|
+|check|total|112.00|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class CalculateDiscount extends fit.ColumnFixture { //COPY:ALL
+        public double amount; //COPY:ALL
+        private Discount application = new Discount(); //COPY:ALL
+        //COPY:ALL
+        public double discount() { //COPY:ALL
+                return application.getDiscount(amount); //COPY:ALL
+        } //COPY:ALL
+} //COPY:ALL
+
+|!-CalculateDiscount-!|
+|''amount''|''discount()''|
+|-100.00|'''error'''|
+|1200.00|60.00|
+
+
+
+
+public int occupantCount() { //COPY:ALL
+        return CHAT.occupants(roomName); //COPY:ALL
+} //COPY:ALL
+
+|enter|room|lotr|
+|check|occupant count|error|
+
+
+

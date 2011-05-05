@@ -1,0 +1,77 @@
+<!-- =================================================================== -->
+<!--         Cobertura setup tasks to instrument code and generate	 -->
+<!--         coverage reports. 						 -->
+<!-- =================================================================== -->
+
+<project name="cobertura">
+  <!--taskdef resource="tasks.properties" classpath="lib/cobertura.jar" /-->
+  <property name="cobertura.build" value="${basedir}/target/instrumented_classes"/>
+  <property name="cobertura.report" value="${basedir}/cobertura_report"/>
+
+  <!-- =================================================================== -->
+  <!-- COBERTURA COVERAGE SETUP - Instruments already compiled code 	   -->
+  <!-- =================================================================== -->
+  <target name="cobertura-setup" depends="compile,compile-test">
+    <echo>CP ${class.path}</echo>
+    <echo>Instrumenting all classes in ${build} into ${cobertura.build}</echo>
+    <delete dir="${cobertura.build}"/>
+    <mkdir dir="${cobertura.build}"/>
+    <delete file="cobertura.ser"/>
+    <java classname="net.sourceforge.cobertura.instrument.Main" fork="yes">
+        <arg value="--destination" />
+        <arg value="${cobertura.build}"/>
+        <arg value="${build}"/>
+        <classpath>
+          <pathelement path="${lib}/cobertura.jar"/>
+          <path refid="compile.classpath"/>
+        </classpath>
+    </java>
+
+<!--
+    <cobertura-instrument todir="${cobertura.build}">
+      <ignore regex="org.apache.log4j.*" />
+      <fileset dir="${build}">
+        <include name="**/*.class" />
+        <exclude name="**/*Test.class" />
+      </fileset>
+      <classpath>
+           <path refid="compile.classpath"/>
+      </classpath>
+    </cobertura-instrument>
+-->
+  </target>
+
+
+  <target name="coverage-check">
+        <cobertura-check branchrate="34" totallinerate="100" />
+  </target>
+
+
+
+  <!-- =================================================================== -->
+  <!-- COBERTURA REPORTS - Generate coverage report 			   -->
+  <!-- Run unit or integration tests before this task. 			   -->
+  <!-- =================================================================== -->
+  <target name="cobertura-report">
+    <echo>Generating cobertura report into ${cobertura.report}</echo>
+    <mkdir dir="${cobertura.report}"/>
+    <cobertura-report format="html" destdir="${cobertura.report}" >
+      <fileset dir="src/main/java">
+        <include name="**/*.java" />
+        <exclude name="**/*Test.java" />
+      </fileset>
+      <fileset dir="src/test/java">
+        <include name="**/*.java" />
+      </fileset>
+    </cobertura-report>
+  </target>
+
+
+  <target name="cobertura" depends="cobertura-setup">
+      <antcall target="test" inheritAll="true">
+          <param name="cobertura.datafile" value="net.sourceforge.cobertura.datafile"/>
+      </antcall>
+      <antcall target="cobertura-report" inheritAll="true"/>
+  </target>
+</project>
+

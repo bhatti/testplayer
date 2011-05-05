@@ -1,0 +1,237 @@
+/* ===========================================================================
+ * $RCS$
+ * Version: $Id: CallInterceptorAspect.bak,v 2.1 2007/07/07 22:20:13 shahzad Exp $
+ * ===========================================================================
+ *
+ * TestPlayer - an automated test harness builder
+ *
+ * Copyright (c) 2005-2006 Shahzad Bhatti (bhatti@plexobject.com)
+ *
+ * This program is free software; you can redistribute it and/or modify 
+ * it under the terms of the GNU General Public License as published by 
+ * the Free Software Foundation; either version 2 of the License, or 
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License 
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * The author may be contacted at bhatti@plexobject.com 
+ * See http://testplayer.dev.java.net/ for more details.
+ *
+ */
+
+package com.plexobject.testplayer.aspects;
+import com.plexobject.testplayer.util.*;
+import com.plexobject.testplayer.events.*;
+import com.plexobject.testplayer.*;
+import java.io.*;
+import java.util.*;
+import org.apache.log4j.*;
+
+import org.codehaus.aspectwerkz.joinpoint.JoinPoint;
+import org.codehaus.aspectwerkz.definition.Pointcut;
+import org.codehaus.aspectwerkz.exception.WrappedRuntimeException;
+import org.codehaus.aspectwerkz.joinpoint.MethodSignature;
+import org.codehaus.aspectwerkz.joinpoint.MethodRtti;
+import org.codehaus.aspectwerkz.joinpoint.CodeRtti;
+import org.codehaus.aspectwerkz.joinpoint.Rtti;
+import org.codehaus.aspectwerkz.joinpoint.ConstructorRtti;
+import org.codehaus.aspectwerkz.AspectContext;
+import org.codehaus.aspectwerkz.joinpoint.MemberSignature;
+import org.codehaus.aspectwerkz.joinpoint.CodeSignature;
+import org.codehaus.aspectwerkz.joinpoint.FieldSignature;
+import org.codehaus.aspectwerkz.joinpoint.StaticJoinPoint;
+import org.codehaus.aspectwerkz.annotation.Annotation;
+
+
+//perInstance name=NAME
+//percflow(topCall()) 
+
+/**
+ * @Aspect perJVM
+ * 
+ * CallInterceptorAspect aspect is an abstract base aspect that gathers 
+ * call information from specified packages and notifies
+ * MethodPluginDispatcher for all calls. The subclass must override scope 
+ * pointcut. This aspect probably is best put in user's application using
+ * Participitant pattern.
+ * This aspect is created per top level flow or per thread. This means
+ * that method dispatcher for notification is created per aspect and it
+ * will only notify listeners about method invocation for this thread.
+ * Note that all exceptions thrown by any method that is intercepted 
+ * are automatically converted into RuntimeException.
+ * This is implemented using aspectwerkz
+ *
+ * @author shahzad bhatti
+ *
+ * modification history
+ * date         who             what
+ * 9/13/05      SB              created.
+ */
+public abstract class CallInterceptorAspect {
+  /**
+   * CallInterceptorAspect  constructor
+   * @param info - aspect context
+   */
+  public CallInterceptorAspect(AspectContext info) {
+    this.info = info;
+  }
+
+
+
+  /**
+   * xExpression !within(com.plexobject.testplayer..*) 
+   * xExpression within(com.plexobject.mini..*)
+   * @Expression within(graph..*)
+   * scope should be overrided by the derived aspect to narrow the calls 
+   * that must be traced.
+   * abstract pointcut: no expression is defined
+   */
+  Pointcut scope;
+  @Pointcut abstract void scope();
+
+
+  /**
+   * @Expression cflow(adviceexecution())
+   */
+  Pointcut adviceCflow;
+
+  /**
+   * pointcut that defines interception for all public calls
+   * @Expression (call(public * *(..)) OR call(public *.new(..))) AND scope
+   * - to disable within test add !within(junit.framework.TestCase+)
+   * -  !within(CallInterceptorAspect+)
+   */
+  Pointcut userCalls; 
+
+
+  /**
+   * @Expression userCalls AND !cflowbelow(userCalls)
+   */
+  Pointcut topCall; 
+
+
+  /**
+   * @Around userCalls(), pointcut="userCalls")
+   * around advice that is invoked when public calls that user is 
+   * interested in are invoked
+   */
+  public Object traceMethod(final JoinPoint joinPoint) throws Throwable {
+    if (context == null) throw new IllegalArgumentException("Null Context " + joinPoint);
+    Object caller = joinPoint.getCaller(); 
+    //Object caller = joinPoint.getThis();
+    Object callee = joinPoint.getCallee(); 
+    //Object callee = joinPoint.getTarget();
+
+
+
+
+    if (joinPoint.getSignature() instanceof CodeSignature == false) {
+      //throw new TestSystemException("Unknown type " + joinPoint.getSignature().getClass().getName() + " for join-point " + joinPoint);
+      return ((ProceedingJoinPoint)joinPoint).proceed();
+    }
+
+
+    CodeSignature signature = (CodeSignature) joinPoint.getStaticPart().getSignature();
+    //MemberSignature, MethodSignature
+    // see signature.getName(), signature.getParameterTypes()
+
+    if (signature == null) throw new IllegalArgumentException("Null method signature " + joinPoint);
+
+    CodeRtti rtti = (CodeRtti) joinPoint.getRtti();
+    boolean constructor = rtti instanceof ConstructorRtti;
+    //if (rtti == null) throw new IllegalArgumentException("Null RTTI " + joinPoint);
+    //boolean constructor = signature instanceof ConstructorSignature;
+    MethodEntry call = new MethodEntry(
+                context.nextMethodEntryId(),
+                null,
+                caller,
+                callee,
+                signature.toString(),
+                rtti.getParameterValues(), //joinPoint.getArgs()
+                constructor,
+		CallStackUtils.getDepth() 
+        );
+
+
+
+
+    String calleeName = call.getCalleeName();
+    //MethodEntry last = caller != callee ? CallStackUtils.getLastFor(call) : null;
+    MethodEntry last = CallStackUtils.getLastFor(call);
+    call.setParent(last);
+
+    String pkg = call.getCalleePackageName();
+    if (context.isPermittedPackage(pkg)) {
+      //???????CallStackUtils.setLast(call); 
+    } else {
+      //logger.debug("*** Skipping notifying " + call + " because package is not permitted");
+      call = null;
+    }
+    boolean sameCallerCallee = caller == callee;
+
+
+    boolean notified = call != null && !dispatcher.isDestroyed();
+    if (notified) {
+      dispatcher.notifyCall(new MethodEvent(this, MethodEvent.BEFORE, call));
+    }
+    ////////////////////////////////////////////////////////////////////////
+    //
+    Exception exception = null;
+    try {
+      if (logger.isEnabledFor(Level.DEBUG)) {
+         logger.debug("*** Begin intercepting " + System.identityHashCode(call) + call + ", signature " + signature + ", will notify? " + notified);
+      }
+      //
+      Object rvalue = ((ProceedingJoinPoint)joinPoint).proceed();
+      //CatchClauseRtti crtti = (CatchClauseRtti) joinPoint.getRtti();
+      //Exception e = (Exception) crtti.getParameterValue();
+      //if (e != null) throw e;
+
+      if (call != null) call.setReturnValue(rvalue);
+      return rvalue;
+    } catch (Exception e) {
+      exception = e;
+      if (call != null) call.setException(e);
+      //logger.error("Method failed in CallInterceptorAspect permitted ?" + context.isPermittedPackage(pkg) + " call " + call, e);
+      if (e instanceof RuntimeException) throw (RuntimeException) e;
+      throw new TestSystemException(e);
+    } finally {
+      if (logger.isEnabledFor(Level.DEBUG)) {
+        logger.debug("*** End intercepting " + System.identityHashCode(call) + call + " signature " + signature + ", exception " + exception + ", will notify ?" + notified);
+      }
+
+      //
+      CallStackUtils.setLast(call); 
+      //
+      if (notified) {
+        dispatcher.notifyCall(new MethodEvent(this, MethodEvent.AFTER, call));
+      }
+    }
+  }
+
+  /**
+   * @After(type="java.lang.String", pointcut="topCall")
+   * cleans stack trace of method calls within this thread and top call
+   */
+  public void cleanStack(final JoinPoint joinPoint) throws Throwable {
+    CallStackUtils.cleanStack();
+  }
+
+
+  //////////////////////////////////////////////////////////////////////////
+
+
+  ///////////////////////////////////////////////////////////////////////////
+  //
+  //private AspectContext info;
+  private static ApplicationContext context = new ApplicationContext(); 
+  private static MethodPluginDispatcher dispatcher = new MethodPluginDispatcher(context);
+  private static Logger logger = Logger.getLogger(CallInterceptorAspect.class.getName());
+} 

@@ -1,0 +1,26 @@
+<!-- =================================================================== -->
+<!-- JDepend - Checks package dependencies and calculates design metrics -->
+<!-- =================================================================== -->
+
+<project name="jdepend">
+  <!-- =================================================================== -->
+  <!-- jdepend -generates jdepend report 				   -->
+  <!-- =================================================================== -->
+  <target name="jdepend">
+    <taskdef name="jdepend" classname="org.apache.tools.ant.taskdefs.optional.jdepend.JDependTask">
+            <classpath location="lib/jdepend-2.9.1.jar" />
+     </taskdef>
+    <jdepend format="xml" outputfile="${target.dir}/jdepend.xml">
+		      <exclude name="java.*" />
+		      <exclude name="javax.*" />
+		      <exclude name="net.*" />
+		      <exclude name="org.*" />
+		      <classespath>
+		        <pathelement location="${build.dir}" />
+		      </classespath>
+    </jdepend>
+    <style in="${target.dir}/jdepend.xml"
+	           out="${target.dir}/jdepend.html"
+	           style="config/jdepend2dot.xsl" />
+  </target>
+</project>

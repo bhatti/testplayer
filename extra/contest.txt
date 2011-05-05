@@ -1,0 +1,481 @@
+IBM® 		
+Skip to main content 	
+    Country/region [select] 	     	Terms of use
+	 
+  	
+Search in: 		Search for:   		  	
+     	Home 	     	Products 	     	Services & solutions 	     	Support & downloads 	     	My account 	    
+ 
+developerWorks
+In this article:
+	Why unit testing isn't enough
+	Determinism in concurrency programming
+	Unit testing with ConTest
+	How ConTest works
+	Features of ConTest
+	Challenges and future directions
+	In conclusion
+	Downloads
+	Resources
+	About the authors
+	Rate this page
+	
+
+Related links
+	Java technology technical library
+	
+	
+skip to main content
+	
+developerWorks  >  Java technology  >
+Multithreaded unit testing with ConTest
+
+Why concurrent testing is hard and how ConTest can help
+	developerWorks
+	
+	
+Document options
+	Set printer orientation to landscape mode	
+
+Print this page
+	Email this page	
+
+E-mail this page
+		
+
+Sample code
+
+Rate this page
+		
+
+Help us improve this content
+
+Level: Introductory
+
+Yarden Nir-Buchbinder (yarden@il.ibm.com), Research scientist, IBM
+Shmuel Ur (ur@il.ibm.com), Research scientist, IBM
+
+04 Apr 2006
+
+    Concurrent programming is notoriously bug-prone. Worse, concurrent bugs tend to be detected late in the development process when they cause considerable damage and are hard to debug. Even when they are done thoroughly, conventional unit-testing practices are likely to miss concurrent bugs. In this article, concurrency experts Shmuel Ur and Yarden Nir-Buchbinder explain why concurrent bugs are so hard to catch and present a new solution from IBM Research.
+
+It's no secret that concurrent programs are prone to bugs. Writing such programs is a challenge, and the bugs that creep in during the process aren't easily discovered. Many concurrent bugs are found only at system test, functional test, or by the user. And by that time, they're expensive to fix -- if you can fix them at all -- because they're so hard to debug.
+
+In this article, we introduce ConTest, a tool for testing, debugging, and measuring the coverage of concurrent programs. As you'll quickly see, ConTest isn't a replacement for unit testing but a complementary technology that addresses the failures of unit testing for concurrency programs.
+
+Note that this article includes an examples package that you can experiment with on your own, once you understand the basics of how ConTest works.
+
+Why unit testing isn't enough
+
+Ask any Java™ developer and they'll tell you that unit testing is a good practice. Make the proper investment in a unit test, and it pays off later. With unit testing, you find bugs earlier and fix them more easily than you would without. But the common methodologies of unit testing, even when done thoroughly, aren't so good at finding concurrent bugs. That's why they tend to escape to later stages in the program.
+
+Why do unit tests consistently miss concurrent bugs? It is often said that the problem with concurrent programs (and bugs) is that they are nondeterministic. But for unit testing purposes, paradoxically, the problem is that concurrent programs are too deterministic. The following two examples illustrate this point.
+
+The naked name printer
+
+Our first example is a class that does nothing more than print a two-part name. For educational purposes, we've split this task among three threads: one prints the first name, one prints a space, and one prints the surname and a new-line. A full-fledged synchronization protocol, including synchronizing on a lock and calling wait() and notifyAll(), ensures that everything happens in the right order. As you can see in Listing 1, main() serves as a unit test, invoking this class for the name "Washington Irving":
+
+Listing 1. Name printer
+
+
+
+public class NamePrinter {
+
+   private final String firstName;
+   private final String surName;
+
+   private final Object lock = new Object();
+   private boolean printedFirstName = false;
+   private boolean spaceRequested = false;
+
+   public NamePrinter(String firstName, String surName) {
+      this.firstName = firstName;
+      this.surName = surName;
+   }
+
+   public void print() {
+      new FirstNamePrinter().start();
+      new SpacePrinter().start();
+      new SurnamePrinter().start();
+   }
+
+   private class FirstNamePrinter extends Thread {
+      public void run() {
+         try {
+            synchronized (lock) {
+               while (firstName == null) {
+                  lock.wait();
+               }
+               System.out.print(firstName);
+               printedFirstName = true;
+               spaceRequested = true;
+               lock.notifyAll();
+            }
+         } catch (InterruptedException e) {
+            assert (false);
+         }
+      }
+   }
+
+   private class SpacePrinter extends Thread {
+      public void run() {
+         try {
+            synchronized (lock) {
+               while ( ! spaceRequested) {
+                  lock.wait();
+               }
+               System.out.print(' ');
+               spaceRequested = false;
+               lock.notifyAll();
+            }
+         } catch (InterruptedException e) {
+            assert (false);
+         }
+      }
+   }
+
+   private class SurnamePrinter extends Thread {
+      public void run() {
+         try {
+            synchronized(lock) {
+               while ( ! printedFirstName || spaceRequested || surName == null) {
+                  lock.wait();
+               }
+               System.out.println(surName);
+            }
+         } catch (InterruptedException e) {
+            assert (false);
+         }
+      }
+   }
+
+   public static void main(String[] args) {
+      System.out.println();
+      new NamePrinter("Washington", "Irving").print();
+   }
+}
+
+
+If you want, you can compile and run this class and verify that the name is printed as expected. Next, let's remove all of the synchronization protocol, as shown in Listing 2:
+
+Listing 2. The naked name printer
+
+
+
+public class NakedNamePrinter {
+
+   private final String firstName;
+   private final String surName;
+
+   public NakedNamePrinter(String firstName, String surName) {
+      this.firstName = firstName;
+      this.surName = surName;
+      new FirstNamePrinter().start();
+      new SpacePrinter().start();
+      new SurnamePrinter().start();
+   }
+
+   private class FirstNamePrinter extends Thread {
+      public void run() {
+         System.out.print(firstName);
+      }
+   }
+
+   private class SpacePrinter extends Thread {
+      public void run() {
+         System.out.print(' ');
+      }
+   }
+
+   private class SurnamePrinter extends Thread {
+      public void run() {
+         System.out.println(surName);
+      }
+   }
+
+   public static void main(String[] args) {
+      System.out.println();
+      new NakedNamePrinter("Washington", "Irving");
+   }
+}
+
+
+This move renders our class totally incorrect: it no longer includes the instructions to ensure things happen in the right order. But what happens when we compile and run the class? Everything is exactly the same! "Washington Irving" is printed in perfect order.
+
+What is the moral of this experiment? Imagine that the name printer, complete with its synchronization protocol, is your concurrent class. You ran your unit test -- many times, perhaps -- and it worked perfectly every time. Naturally, you think you can rest assured that it is correct. But as you've just seen, the output is equally correct with no synchronization protocol at all and, you may safely conclude, with many wrong implementations of the protocol. So, while you think you've tested your protocol, you didn't really test it.
+
+Now let's look at another example.
+
+The buggy work queue
+
+The following class is a model of a common concurrent utility: a work queue. It has one method to enqueue tasks and another method to work them out. Before removing a task from the queue, the work() method checks to see if it is empty and if so, waits. The enqueue() method notifies all waiting threads (if any). To make this example simple, the tasks are just strings and the work is to print them. Again, main() serves as a unit test. By the way, this class has a bug.
+
+Listing 3. Print queue
+
+
+
+import java.util.*;
+
+public class PrintQueue {
+   private LinkedList<String> queue = new LinkedList<String>();
+   private final Object lock = new Object();
+
+   public void enqueue(String str) {
+      synchronized (lock) {
+         queue.addLast(str);
+         lock.notifyAll();
+      }
+   }
+
+   public void work() {
+      String current;
+      synchronized(lock) {
+         if (queue.isEmpty()) {
+            try {
+               lock.wait();
+            } catch (InterruptedException e) {
+               assert (false);
+            }
+         }
+         current = queue.removeFirst();
+      }
+      System.out.println(current);
+   }
+
+   public static void main(String[] args) {
+      final PrintQueue pq = new PrintQueue();
+
+      Thread producer1 = new Thread() {
+         public void run() {
+            pq.enqueue("anemone");
+            pq.enqueue("tulip");
+            pq.enqueue("cyclamen");
+         }
+      };
+
+      Thread producer2 = new Thread() {
+         public void run() {
+            pq.enqueue("iris");
+            pq.enqueue("narcissus");
+            pq.enqueue("daffodil");
+         }
+      };
+
+      Thread consumer1 = new Thread() {
+         public void run() {
+            pq.work();
+            pq.work();
+            pq.work();
+            pq.work();
+         }
+      };
+
+      Thread consumer2 = new Thread() {
+         public void run() {
+            pq.work();
+            pq.work();
+         }
+      };
+
+      producer1.start();
+      consumer1.start();
+      consumer2.start();
+      producer2.start();
+   }
+}
+
+
+After running the test, everything seems all right. As the developer of the class, you would likely feel quite content: The test seemed nontrivial (two producers, two consumers, and an interesting order among them that would exercise the wait), and it worked correctly.
+
+But there's that bug we mentioned. Did you see it? If not, just wait; we'll soon catch it.
+
+
+	Back to top
+
+
+Determinism in concurrency programming
+
+Why didn't the two example unit tests expose our concurrency bugs? Although the thread scheduler, in principle, may switch threads in the middle and run them in different order, it tends not to. Because concurrent tasks in unit tests are usually small and few, they usually run to completion before the scheduler switches the thread, unless it is forced to (say, by wait()). And when it does perform a thread switch, it tends to do it in the same place whenever you run the program.
+
+Like we said previously, the problem is that the program is too deterministic: You end up testing just one interleaving (the relative order of commands in different threads) out of the myriad possible ones. When will more interleavings be exercised? When there are more concurrent tasks and more complex interplay between concurrent classes and protocols. That is, when you run the system and function tests -- or when the whole product runs at the user's site. That's where all the bugs will surface.
+
+
+	Back to top
+
+
+Unit testing with ConTest
+
+What's needed is for the JVM to be less deterministic, more "fuzzy" when doing unit tests. This is where ConTest comes into play. If you run the NakedNamePrinter from Listing 2 with ConTest several times, you get all kinds of results, as shown in Listing 4:
+
+Listing 4. Output of naked name printer with ConTest
+
+
+
+>Washington Irving (the expected result)
+
+> WashingtonIrving (the space was printed first)
+
+>Irving
+ Washington (surname + new-line printed first)
+
+> Irving
+Washington (space, surname, first name)
+
+
+Note that you won't necessarily get these results in this order or one after the other; you're likely to see the first two several times before you see the last two. But quite soon, you'll see all of them. ConTest makes all kinds of interleavings happen; because the interleavings are chosen randomly, a different one is likely to result each time you run the same test. By comparison, if you the run the NamePrinter shown in Listing 1 with ConTest, you'll always get the expected result. In that case, the synchronization protocol forces the correct order, so ConTest only generates legal interleavings.
+
+If you run PrintQueue with ConTest, you'll get a different order of the flowers, which may be considered an acceptable result for a unit test. But run it several times and suddenly you'll get a NoSuchElementException thrown by LinkedList.removeFirst() in line 24. The bug lurks in the following scenario:
+
+   1. Two consumer threads are started, find the queue to be empty, and do wait().
+   2. A producer enqueues a task and notifies both consumers.
+   3. One consumer gets the lock, works the task, and leaves the queue empty. It then releases the lock.
+   4. The second consumer gets the lock (it can proceed because it was notified) and tries to work a task, but now the queue is empty.
+
+While not an ordinary interleaving for this unit test, the above scenario is legal and could happen in more complex uses of the class. With ConTest, you can make it happen in the unit test. (By the way, do you know how to fix the bug? Careful: replacing the notifyAll() with notify() solves the problem in this scenario but will fail on others!)
+
+
+	Back to top
+
+
+How ConTest works
+
+The basic principle behind ConTest is quite simple. The instrumentation stage transforms the class files, injecting into chosen places calls to ConTest run-time functions. At run time, ConTest sometimes tries to cause context switches in these places. The chosen places are those whose relative order among the threads is likely to affect the result: entrance and exit from synchronized blocks, access to shared variables, etc. Context switches are attempted by calling methods such as yield() or sleep(). The decisions are random so that different interleavings are attempted at each run. Heuristics are used to try to reveal typical bugs.
+
+Note that ConTest does not know whether a bug has actually been revealed -- it has no notion of how the program is expected to behave. You, the user, should have a test and know which test results would be considered correct and which would indicate a bug. ConTest just helps expose the bug. On the other hand, there are no false alarms: All interleavings that occur with ConTest are legal as far as the JVM rules are concerned.
+
+As you've seen, you get an added value from running the same test many times. In fact, we recommend running it over and over again for a whole night. You can then be highly confident that all possible interleavings have been executed.
+
+
+	Back to top
+
+
+Features of ConTest
+
+In addition to its basic methodology, ConTest brings several key features into play to expose concurrency bugs:
+
+    * Synchronization coverage: Measuring code coverage is a highly recommended practice in unit testing, but when it comes to concurrent programs, code coverage is misleading. In our first two examples, the naked name printer and buggy print queue, the given unit tests would show full statement coverage (except for InterruptedException handling) without exposing the bugs. Synchronization coverage bridges this gap: It measures how much contention exists among synchronized blocks; that is, whether they did "interesting" things and, therefore, whether you covered interesting interleavings. See Resources for additional information.
+
+    * Deadlock prevention: ConTest can analyze whether locks were taken nestedly in conflicting order, which indicates a danger of deadlock. This analysis is done offline after running the test(s).
+
+    * Debug aids: ConTest can produce some run-time reports useful for concurrent debugging: a report on the status of locks (which threads hold which locks, which are in wait, etc.), a report of the current location of threads, and a report on the last values assigned to and read from variables. You can also do these queries remotely; for example, you can query the state of a server (running with ConTest) from a different machine. Another feature useful for debugging is approximate replay, which attempts to repeat the interleaving of a given run (not guaranteed, but in high probability).
+
+    * UDP network perturbation: ConTest carries the idea of concurrent perturbation into the domain of network communication by UDP (datagram) sockets. UDP programs cannot rely on the reliability of the network; packets may be lost or reordered, and it's up to the application to handle these situations. Similar to multithreading, this presents a testing challenge: In a normal environment, the packets tend to arrive in perfect order, and the perturbation-handling functionality is not actually tested. ConTest can simulate bad network conditions, thus exercising this functionality and exposing its bugs.
+
+
+
+	Back to top
+
+
+Challenges and future directions
+
+ConTest was created for the Java platform. A version for C/C++, for the pthread library, is now in use internally at IBM but does not contain all the features of the Java version. Java code is much easier for ConTest to manipulate than C/C++ for two reasons: synchronization is part of the Java language, and the bytecode is very easy to instrument. We're working on ConTest for other libraries, such as MPI. If you would like to use ConTest for C/C++, please contact the authors. Hard real-time software is also a problem for ConTest, as the tool works by adding delays. We're investigating methodologies similar to monitoring of hard real-time software for the use of ConTest, but at present, we're not sure how to surmount this problem.
+
+As far as future directions, we're currently working on publishing a listeners architecture, which will allow us to apply listener-based tools on top of ConTest. Using the listeners architecture would make it possible to create atomicity checkers, deadlock detectors, and other analyzers and to try new delay mechanisms without having to write the infrastructure involved.
+
+
+	Back to top
+
+
+In conclusion
+
+ConTest is a tool for testing, debugging, and measuring the coverage of concurrent programs. Developed by researchers at the IBM Research laboratory in Haifa, Israel, ConTest is available from alphaWorks in a limited trial version. Please contact the authors if you have further questions about ConTest.
+
+
+
+	Back to top
+
+
+Downloads
+Description	Name	Size	Download method
+Presentation	j-contestsynch-pres.zip	96KB	HTTP
+Sample code	j-contestexamples.zip	8KB	HTTP
+	Information about download methods			Get Adobe® Reader®
+
+
+	Back to top
+
+
+Resources
+Learn
+
+    * Multithreaded Java program test generation (Orit Edelstein, Eitan Farchi, Evgeny Goldin, Yarden Nir, Gil Ratsaby, Shmuel Ur; IBM Systems Journal, November 2002): An in-depth discussion of ConTest by its authors.
+
+    * Framework for testing multi-threaded Java programs (Orit Edelstein, Eitan Farchi, Evgeny Goldin, Yarden Nir, Gil Ratsaby, Shmuel Ur; Concurrency and Computation: Practice and Experience, February 2003): Introduces ConTest as a new testing framework.
+
+    * "Java theory and practice: Concurrency in JDK 5.0" (Brian Goetz, developerWorks, November 2004): Learn how concurrency support in JDK 5.0 can help make your code faster and easier to maintain.
+
+    * "Java theory and practice: More flexible, scalable locking in JDK 5.0" (Brian Goetz, developerWorks, October 2004): Discusses how new locking facilities enable high-performance concurrent application development in JDK 5.0. Includes an explanation of atomic variables.
+
+    * "Java theory and practice: Fixing the Java Memory Model, Part 1" and Part 2 (Brian Goetz, developerWorks, February/March 2004): Explains how the original Java platform memory model undermined concurrency programming, and what JDK 5.0 has done to repair the damage.
+
+    * "Diagnosing Java Code: The Orphaned Thread bug pattern" (Eric Allen, developerWorks, August 2001): Looks at an important concurrent bug pattern.
+
+    * "Eye on performance: Wait leaks" (Jack Shirazi and Kirk Pepperdine, developerWorks, January 2005): Demonstrates how to spot wait leaks, which often occur in concurrent programs.
+
+    * "Double-checked locking and the Singleton pattern" (Peter Haggar, developerWorks, May 2002): Explains why the double-checked locking idiom should never be used.
+
+    * "Cover your code with Hansel and Gretel" (Dennis Sosnoski, developerWorks, February 2005): An introduction to code coverage techniques.
+
+    * "In pursuit of code quality: Don't be fooled by the coverage report" (Andrew Glover, (developerWorks, January 2006): Discusses some of the pitfalls of using code coverage measurement as a barometer of code quality.
+
+    * The Java technology zone: Hundreds of articles about every aspect of Java programming.
+
+
+Get products and technologies
+
+    * ConTest: Download a free trial version from IBM alphaWorks.
+
+
+Discuss
+
+    * developerWorks blogs: Get involved in the developerWorks community.
+
+
+
+	Back to top
+
+
+About the authors
+
+		
+
+Yarden received his BSc in computer science from the Technion Technological Institute and MA in philosophy from Haifa University. Since 2000, he has been working at the IBM Research Lab in Haifa, Israel, on concurrent testing methodologies and tools.
+
+		
+
+Dr. Shmuel Ur, an IBM Master Inventor, is a research scientist at the IBM Research Lab in Haifa, Israel. He works in the field of software testing and concentrates on coverage and testing of multithreaded programs. Shmuel teaches software testing at the Technion Technological Institute and Haifa University. He received his PhD in Algorithms Optimization and Combinatorics in 1994 from Carnegie Mellon University, and his BSc and MSc from the Technion in Israel. Shmuel has published in the fields of hardware testing, artificial intelligence, algorithms, software testing, and testing of multithreaded programs. He is the chair of PADTAD, a workshop on testing multithreaded applications, and of the IBM Verification Conference.
+
+
+
+	Back to top
+
+
+Rate this page
+
+Please take a moment to complete this form to help us better serve you.
+
+Did the information help you to achieve your goal?
+	
+Yes	No	Don't know
+	 
+
+Please provide us with comments to help improve this page:
+	
+ 
+	 
+
+How useful is the information?
+(1 = Not at all,
+5 = Extremely useful)
+	
+1	2	3	4	5
+	 
+	
+
+
+	Back to top
+
+
+	
+
+    About IBM	    	Privacy	    	Contact

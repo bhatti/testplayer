@@ -1,0 +1,105 @@
+    * Data-driven tests that need to be implemented as unit tests. Calculations are the typical example.
+    * Keyword-driven tests that automate application usage. These are system tests and require the application to be running. Buttons are clicked, data is entered, and resulting pages/screens are checked to contain certain values. The test team usually implements these tests, but some developers benefit from them as well.
+    * Manual tests. These tests are either too expensive to automate and the possible errors not severe enough, or they are so fundamental (start page not displayed) that their breakage would be discovered at once.
+
+Boundary conditions
+Boundary conditions are the situations directly on, above, and beneath the edges of input and output equivalence classes. Experiences show that test cases exploring boundary conditions have a higher payoff than test cases that do not. A typical example is the infamous "one-off" on loops and arrays.
+
+Scenarios can be a great help in finding exceptions and boundary conditions, as they provide a good way to get domain experts to talk about business.
+
+Scenarios
+For most projects, the requirements engineer hands the specification to the developer, who studies the requirements, asks some questions, and starts to design/code/test. Afterwards, the developer hands the software to the test team and, after some rework and fixes, passes it on to the customer (who will likely think of some exceptions requiring changes). Moving the text to FitNesse won't change this process; however, adding examples, scenarios, and tests will.
+
+Scenarios are especially helpful for getting the ball rolling during testing. Some examples follow. Answering the question of how much child allowance is to be paid to each will clarify a lot:
+
+    * Maria is a single parent. She has two sons (Bob, 2, and Peter, 15) and works part-time (20 hours per week) as a secretary.
+    * Maria loses her job. Later, she works 10 hours per week as a shop assistant and another 5 hours as a babysitter.
+    * Paul and Lara have a daughter (Lisa, 17) who is physically challenged and a son (Frank, 18) who is still in university.
+
+Just talking through these scenarios should help the testing process. Executing them manually on the software will almost certainly find some loose ends. Think we can't do that, since we don't have a prototype yet? Why not?
+
+Keyword-driven testing
+Keyword-driven testing can be used to simulate a prototype. FitNesse allows us to define keyword-driven tests (see "Totally Data-Driven Automated Testing" for details). Even with no software to (automatically) execute the tests against, keyword-driven tests will help a lot.
+
+
+Figure 3. ActionFixture test. Click on thumbnail to view full-sized image.
+
+Figure 3 shows what a keyword-driven test might look like. The first column represents keywords from FitNesse. The second column represents methods in a Java class (we write those, and they need to follow the restrictions put on method names in Java). The third column represents data entered into the method from the second column. The last row demonstrates what a failed test might look like (passed tests are green). As you can see, it is quite easy to find out what went wrong.
+
+Such tests are easy and even fun to create. Testers without programming skills can create them, and the customer can read them (after a short introduction).
+
+Defining tests this way, right next to the requirement, has some important advantages over the traditional definition of test cases, even without automation:
+
+    * The context is at hand. The test case itself can be written with the least possible amount of work and is still precise.
+    * If the requirement changes, there is a strong chance that the test will change as well (not very likely when several tools are used).
+    * The test can be executed at once to show what needs to be fixed to make this new/changed requirement work.
+
+To automate the test, a thin layer of software is created, which is delegated to the real test code. These tests are especially useful for automating manual GUI tests. I developed a test framework based on HTTPUnit for automating the testing of Webpages.
+
+Here is the code automatically executed by FitNesse:
+
+package stephanwiesner.javaworld;
+
+import fit.ColumnFixture;
+
+public class ChildAllowanceFixture extends ColumnFixture
+{
+   public void personButton() {
+      System.out.println("pressing person button");
+   }
+   public void securityNumber(int number) {
+      System.out.println("entering securityNumber " + number);
+   }
+   public int childAllowance() {
+      System.out.println("calculating child allowance");
+      return 190;  
+   }
+  
+   [...]
+  
+}
+
+The output of the tests can be examined in FitNesse as well (see Figure 4), which greatly helps with debugging. In contrast to JUnit, where one is discouraged from writing debug messages, I find them absolutely necessary when working with automated Web tests.
+
+
+Figure 4. Standard output. Click on thumbnail to view full-sized image.
+
+When testing a Web-based application, error pages are included in the FitNesse page and displayed, making debugging much easier than working with log files.
+
+Data-driven testing
+While keyword-driven testing is fine for GUI automation, data-driven testing is the first choice for testing code that does any kind of calculation. If you have written unit tests before, what is the single most annoying thing about those tests? Chances are, you think of data. Your tests will be full of data, which often changes, making maintenance a nightmare. Testing different combinations requires different data, probably making your tests complicated, ugly beasts.
+
+With data-driven testing, the data is separated from the code. It is usually created in some kind of table, stored as a CSV file, and read in by the test code. With FitNesse, we can conveniently store, change, and access this test data.
+
+Let's change the table illustrated in Figure 2 into a test. To do that, copy the table to Excel, change it, and use FitNesse's Excel import function. This is a useful function, as large tables tend to be hard to maintain in FitNesse. The result is demonstrated by Figure 5. Each row represents a test. The columns with the question mark represent Java methods that we need to write, while those without a question mark contain the input data for the test.
+
+
+Figure 5. Data-driven test table. Click on thumbnail to view full-sized image.
+
+Again, the test is quite easy to understand when read in the context of the requirements. If you have ever wondered when to use equivalence classes for your test cases, here they are. The last rows are probably the most important, as the requirements don't say anything about how to handle invalid data or what to do with children older than 20 and still in school. The keyword "error" states that an exception is expected.
+
+FAQ
+Demonstrating the possible ways to combine requirements, testing, and development with FitNesse leaves many open questions. Some answers to those questions follow.
+
+What becomes of the manual testers?
+The work of a manual tester often consists of the repetitive task of executing manual regression tests. This is not only expensive, but also boring and error-prone. Test automation can reduce the amount of manual work needed for regression testing; it does not, however, make the manual tester obsolete. He will have more time for the interesting tests, such as complex scenarios spanning several areas of the application. Though these tests take longer to find errors, the costs of not finding them are higher.
+
+Is functional testing not necessary anymore?
+One might think so. If the customer does define/review all test cases within the requirements, the software should be "ready" when all tests are green. My practical experience, however, is that the customer will come up with additional requirements. Still, there should be fewer changes, and those can be far more easily classified as real changes (resulting in additional payments).
+
+Does writing requirements in FitNesse offer advantages to Word documents?
+Even without any tests, using a wiki for requirements might give you some advantages. The documents are automatically available on a Web server and can be accessed by many people simultaneously. Full text search is available and documents can be linked. I find two things especially noteworthy:
+
+    * Creating a data dictionary and linking terms to this is easy. Even more important is the "where-used" function. If we have to change a term, we can see at once where the term is used and find potential areas of conflict from the change.
+    * As Bugzilla (or Jira) is Web-based, we can easily link artifacts (bugs, tasks, discussions, etc.) between these two systems, making our work much more efficient.
+
+FitNesse allows us to execute tests in a certain order, JUnit forbids this. What is your experience with this?
+With JUnit, you tend to have lots of setUp() and tearDown() methods that create and clean up, respectively, the same objects. In certain cases, it can be nice to have all related tests on a single FitNesse page and be able to rely on their order. Thus, the first test can create a person, the next three can do some modifications, and the last will delete it. What if the first test fails, and the person is not created? No problem. Since the first test failed, I won't look at the others until the first is fixed. I don't use these sequences often, but sometimes it can make my work much easier.
+
+Is FitNesse ready to be used in large projects?
+Most developers will understand the advantages of FitNesse quite easily and can live with its simplicity. Nontechnical persons might find it difficult to work without features like an automatic spellchecker or a WYSIWYG text editor. A simple example is that FitNesse only allows three categories of headlines, while our requirements contained five. We extended FitNesse to provide these additional levels.
+
+FitNesse does not include any PDF export or the like. I am used to working with Word documents up to 60 pages in length. Though they might be hard to handle online, they are easy to print. After I moved them to FitNesse, I couldn't print them anymore, as they each turned into several pages. I had to program a workaround for this.
+
+FitNesse does have a simple mechanism to show what documents changed and even by whom, but not what changed. The authorization functions are limited. Starting a new project with FitNesse is, of course, much easier than reworking a running one. For small- to medium-sized projects, I consider FitNesse highly recommendable. Large projects can be completed, but they do come with a price and should be evaluated carefully.
+

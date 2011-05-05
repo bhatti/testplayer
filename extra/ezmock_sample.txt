@@ -1,0 +1,405 @@
+/*
+ * Copyright (c) 2003-2006 OFFIS, Henri Tremblay. 
+ * This program is made available under the terms of the MIT License.
+ */
+package org.easymock.classextension.samples;
+
+import static org.easymock.classextension.EasyMock.createMock;
+import static org.easymock.classextension.EasyMock.replay;
+import static org.easymock.classextension.EasyMock.verify;
+import junit.framework.TestCase;
+
+/**
+ * Example of how to use <code>MockClassControl</code>
+ */
+public class BasicClassMockTest extends TestCase {
+
+    /**
+     * Our nice class that is allowed to print
+     */
+    public static class Document {
+
+        private Printer printer;
+
+        private String content;
+
+        public Document(Printer printer) {
+            this.printer = printer;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
+        public void setContent(String content) {
+            this.content = content;
+        }
+
+        public void print() {
+            printer.print(content);
+        }
+    }
+
+    /**
+     * The terrible 3rd party class that is not an interface but that we realy
+     * want to mock.
+     */
+    public static abstract class Printer {
+        public abstract void print(String toPrint);
+    }
+    
+    private Printer printer;
+
+    private Document document;
+
+    protected void setUp() throws Exception {
+        super.setUp();        
+        printer = createMock(Printer.class);;
+        document = new Document(printer);
+    }
+
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        printer = null;
+        document = null;
+    }
+
+    public void testPrintContent() {
+        printer.print("Hello world");
+        replay(printer);
+
+        document.setContent("Hello world");
+        document.print();
+
+        verify(printer); // make sure Printer.print was called
+    }
+
+    public void testPrintEmptyContent() {
+        printer.print("");
+        replay(printer);
+
+        document.setContent("");
+        document.print();
+
+        verify(printer); // make sure Printer.print was called
+    }
+}
+/*
+ * Copyright (c) 2003-2006 OFFIS, Henri Tremblay. 
+ * This program is made available under the terms of the MIT License.
+ */
+package org.easymock.classextension.samples;
+
+import static org.easymock.EasyMock.expect;
+import static org.easymock.classextension.EasyMock.createMock;
+import static org.easymock.classextension.EasyMock.replay;
+import static org.easymock.classextension.EasyMock.verify;
+
+import java.lang.reflect.Method;
+
+import junit.framework.TestCase;
+
+/**
+ * @author Henri Tremblay
+ */
+public class PartialClassMockTest extends TestCase {
+
+    public static class Rect {
+
+        private int x;
+
+        private int y;
+
+        public int getX() {
+            return x;
+        }
+
+        public void setX(int x) {
+            this.x = x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public void setY(int y) {
+            this.y = y;
+        }
+
+        public int getArea() {
+            return getX() * getY();
+        }
+    }
+
+    private Rect rect;
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        rect = createMock(Rect.class, new Method[] {
+                Rect.class.getMethod("getX", (Class[]) null),
+                Rect.class.getMethod("getY", (Class[]) null) });
+    }
+
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        rect = null;
+    }
+
+    public void testGetArea() {
+        expect(rect.getX()).andReturn(4);
+        expect(rect.getY()).andReturn(5);
+        replay(rect);
+        assertEquals(20, rect.getArea());
+        verify(rect);
+    }
+}
+/*
+ * Copyright (c) 2001-2006 OFFIS, Tammo Freese.
+ * This program is made available under the terms of the MIT License.
+ */
+package org.easymock.samples;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+public class ClassUnderTest {
+
+    private Set<Collaborator> listeners = new HashSet<Collaborator>();
+
+    private Map<String, byte[]> documents = new HashMap<String, byte[]>();
+
+    public void addListener(Collaborator listener) {
+        listeners.add(listener);
+    }
+
+    public void addDocument(String title, byte[] document) {
+        boolean documentChange = documents.containsKey(title);
+        documents.put(title, document);
+        if (documentChange) {
+            notifyListenersDocumentChanged(title);
+        } else {
+            notifyListenersDocumentAdded(title);
+        }
+    }
+
+    public boolean removeDocument(String title) {
+        if (!documents.containsKey(title)) {
+            return true;
+        }
+
+        if (!listenersAllowRemoval(title)) {
+            return false;
+        }
+
+        documents.remove(title);
+        notifyListenersDocumentRemoved(title);
+
+        return true;
+    }
+
+    public boolean removeDocuments(String[] titles) {
+        if (!listenersAllowRemovals(titles)) {
+            return false;
+        }
+
+        for (String title : titles) {
+            documents.remove(title);
+            notifyListenersDocumentRemoved(title);
+        }
+        return true;
+    }
+
+    private void notifyListenersDocumentAdded(String title) {
+        for (Collaborator listener : listeners) {
+            listener.documentAdded(title);
+        }
+    }
+
+    private void notifyListenersDocumentChanged(String title) {
+        for (Collaborator listener : listeners) {
+            listener.documentChanged(title);
+        }
+    }
+
+    private void notifyListenersDocumentRemoved(String title) {
+        for (Collaborator listener : listeners) {
+            listener.documentRemoved(title);
+        }
+    }
+
+    private boolean listenersAllowRemoval(String title) {
+        int result = 0;
+        for (Collaborator listener : listeners) {
+            result += listener.voteForRemoval(title);
+        }
+        return result > 0;
+    }
+
+    private boolean listenersAllowRemovals(String[] titles) {
+        int result = 0;
+        for (Collaborator listener : listeners) {
+            result += listener.voteForRemovals(titles);
+        }
+        return result > 0;
+    }
+
+}
+/*
+ * Copyright (c) 2001-2006 OFFIS, Tammo Freese.
+ * This program is made available under the terms of the MIT License.
+ */
+package org.easymock.samples;
+
+public interface Collaborator {
+    void documentAdded(String title);
+
+    void documentChanged(String title);
+
+    void documentRemoved(String title);
+
+    byte voteForRemoval(String title);
+
+    byte voteForRemovals(String[] title);
+}
+/*
+ * Copyright (c) 2001-2006 OFFIS, Tammo Freese.
+ * This program is made available under the terms of the MIT License.
+ */
+package org.easymock.samples;
+
+import static org.easymock.EasyMock.*;
+import junit.framework.TestCase;
+
+public class ExampleTest extends TestCase {
+
+    private ClassUnderTest classUnderTest;
+
+    private Collaborator mock;
+
+    protected void setUp() {
+        mock = createMock(Collaborator.class);
+        classUnderTest = new ClassUnderTest();
+        classUnderTest.addListener(mock);
+    }
+
+    public void testRemoveNonExistingDocument() {
+        replay(mock);
+        classUnderTest.removeDocument("Does not exist");
+    }
+
+    public void testAddDocument() {
+        mock.documentAdded("New Document");
+        replay(mock);
+        classUnderTest.addDocument("New Document", new byte[0]);
+        verify(mock);
+    }
+
+    public void testAddAndChangeDocument() {
+        mock.documentAdded("Document");
+        mock.documentChanged("Document");
+        expectLastCall().times(3);
+        replay(mock);
+        classUnderTest.addDocument("Document", new byte[0]);
+        classUnderTest.addDocument("Document", new byte[0]);
+        classUnderTest.addDocument("Document", new byte[0]);
+        classUnderTest.addDocument("Document", new byte[0]);
+        verify(mock);
+    }
+
+    public void testVoteForRemoval() {
+        // expect document addition
+        mock.documentAdded("Document");
+        // expect to be asked to vote, and vote for it
+        expect(mock.voteForRemoval("Document")).andReturn((byte) 42);
+        // expect document removal
+        mock.documentRemoved("Document");
+
+        replay(mock);
+        classUnderTest.addDocument("Document", new byte[0]);
+        assertTrue(classUnderTest.removeDocument("Document"));
+        verify(mock);
+    }
+
+    public void testVoteAgainstRemoval() {
+        // expect document addition
+        mock.documentAdded("Document");
+        // expect to be asked to vote, and vote against it
+        expect(mock.voteForRemoval("Document")).andReturn((byte) -42); // 
+        // document removal is *not* expected
+
+        replay(mock);
+        classUnderTest.addDocument("Document", new byte[0]);
+        assertFalse(classUnderTest.removeDocument("Document"));
+        verify(mock);
+    }
+
+    public void testVoteForRemovals() {
+        mock.documentAdded("Document 1");
+        mock.documentAdded("Document 2");
+        String[] documents = new String[] { "Document 1", "Document 2" };
+        expect(mock.voteForRemovals(aryEq(documents))).andReturn((byte) 42);
+        mock.documentRemoved("Document 1");
+        mock.documentRemoved("Document 2");
+        replay(mock);
+        classUnderTest.addDocument("Document 1", new byte[0]);
+        classUnderTest.addDocument("Document 2", new byte[0]);
+        assertTrue(classUnderTest.removeDocuments(new String[] { "Document 1",
+                "Document 2" }));
+        verify(mock);
+    }
+
+    public void testVoteAgainstRemovals() {
+        mock.documentAdded("Document 1");
+        mock.documentAdded("Document 2");
+        String[] documents = new String[] { "Document 1", "Document 2" };
+        expect(mock.voteForRemovals(aryEq(documents))).andReturn((byte) -42);
+        replay(mock);
+        classUnderTest.addDocument("Document 1", new byte[0]);
+        classUnderTest.addDocument("Document 2", new byte[0]);
+        assertFalse(classUnderTest.removeDocuments(new String[] { "Document 1",
+                "Document 2" }));
+        verify(mock);
+    }
+}
+/*
+ * Copyright (c) 2001-2006 OFFIS, Tammo Freese.
+ * This program is made available under the terms of the MIT License.
+ */
+package org.easymock.samples;
+
+import static org.easymock.EasyMock.reportMatcher;
+
+import org.easymock.IArgumentMatcher;
+
+public class ThrowableEquals implements IArgumentMatcher {
+    private Throwable expected;
+
+    public ThrowableEquals(Throwable expected) {
+        this.expected = expected;
+    }
+
+    public boolean matches(Object actual) {
+        if (!(actual instanceof Throwable)) {
+            return false;
+        }
+        String actualMessage = ((Throwable) actual).getMessage();
+        return expected.getClass().equals(actual.getClass())
+                && expected.getMessage().equals(actualMessage);
+    }
+
+    public void appendTo(StringBuffer buffer) {
+        buffer.append("<");
+        buffer.append(expected.getClass().getName());
+        buffer.append(" with message \"");
+        buffer.append(expected.getMessage());
+        buffer.append("\">");
+
+    }
+
+    public static <T extends Throwable> T eqException(T in) {
+        reportMatcher(new ThrowableEquals(in));
+        return in;
+    }            
+}

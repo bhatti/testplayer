@@ -1,0 +1,146 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.plexobject.testplayer</groupId>
+  <artifactId>TestPlayer</artifactId>
+  <packaging>jar</packaging>
+  <version>0.8</version>
+  <name>TestPlayer</name>
+  <url>http://testplayer.dev.java.net</url>
+
+  <organization>
+    <name>PlexObject Solutions, Inc.</name>
+    <url>http://www.plexobject.com/</url>
+<!--
+    <logo>http://www.plexobject.com/images/plexlogo.gif</logo>
+-->
+  </organization>
+  <inceptionYear>2005</inceptionYear>
+
+<!--
+  <shortDescription>A toolkit to generate unit tests, integration tests and regression data.</shortDescription>
+  <description>
+    Monitors dynamic behavior of an application while it is running and creates unit tests with mocks, integration tests and regression data.
+  </description>
+
+  <repository>
+    <connection>scm:cvs:https://testplayer.dev.java.net/plugins:logifier2</connection>
+  </repository>
+
+  <url>http://localhost:8080/</url>
+-->
+    
+  <mailingLists/>
+
+  <developers>
+    <developer>
+      <name>Shahzad Bhatti</name>
+      <id>shahzad</id>
+      <email>bhatti@plexobject.org</email>
+      <organization>PlexObject Solutions, Inc.</organization>
+      <roles>
+        <role>Author</role>
+      </roles>
+      <url>http://www.plexobject.com/~bhatti</url>
+      <timezone>+5</timezone>
+    </developer>
+  </developers>
+<!--
+  <preGoal name="java:compile">
+             <attainGoal name="aspectj"/>
+           </preGoal>
+-->
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.12</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>jmock</groupId>
+      <artifactId>jmock</artifactId>
+      <version>1.0.1</version>
+      <scope>compile-test</scope>
+    </dependency>
+    <dependency>
+      <groupId>easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>2.2</version>
+      <scope>compile-test</scope>
+    </dependency>
+    <dependency>
+      <groupId>easymock</groupId>
+      <artifactId>easymockclassextension</artifactId>
+      <version>2.2</version>
+      <scope>compile-test</scope>
+    </dependency>
+    <dependency>
+      <groupId>aspectj</groupId>
+      <artifactId>aspectjrt</artifactId>
+      <version>1.2.1</version>
+      <scope>compile-test</scope>
+    </dependency>
+    <dependency>
+      <groupId>aspectj</groupId>
+      <artifactId>aspectjtools</artifactId>
+      <version>1.2.1</version>
+      <scope>compile-test</scope>
+    </dependency>
+
+<!--
+<dependency>
+            <groupId>company-aspects</groupId>
+            <artifactId>example-aspects</artifactId>
+            <version>1.0</version>
+            <properties>
+                <aspectj.weaveWith>true</aspectj.weaveWith>
+            </properties>
+        </dependency>
+        <dependency>
+            <groupId>company-jars</groupId>
+            <artifactId>jar-two</artifactId>
+            <version>1.0</version>
+            <properties>
+                <aspectj.weaveInto>true</aspectj.weaveInto>
+            </properties>
+        </dependency>
+
+        <dependency>
+            <groupId>aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>1.2</version>
+            <url>http://www.eclipse.org/aspectj</url>
+            <properties>
+                <war.bundle>true</war.bundle>
+            </properties>
+        </dependency>
+-->
+
+    </dependencies>
+
+<!--
+    <build>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <aspectSourceDirectory>src/main/java</aspectSourceDirectory>
+    </build>
+    <sourceDirectory>src/main</sourceDirectory>
+    <unitTestSourceDirectory>src/test</unitTestSourceDirectory>
+
+    <unitTest>
+      <includes>
+        <include>**/*Test.java</include>
+      </includes>
+    </unitTest>
+
+-->
+
+</project>
+
+

@@ -1,0 +1,384 @@
+<project name="TestPlayer" default="jar" basedir=".">
+  <property file="build.properties"/>
+  <!-- REMINDER
+       download antcontrib.jar from http://ant-contrib.sourceforge.net/ 
+       and copy the jar file to ANT_HOME's lib 
+    <delete failonerror="no" quiet="true">
+      <fileset dir="${JAVA_HOME}/jre/lib/ext/" includes="aspectjrt.jar,aspectjtools.jar,sequence.jar,log4j-1.2.12.jar"/>
+    </delete>
+
+  -->
+
+
+  <property name="cobertura.build" value="${basedir}/target/instrumented_classes"/>
+  <property name="build" value="${basedir}/target/classes"/>
+  <property name="runtime.aspects" value="false"/>
+  <property name="cobertura.report" value="${basedir}/cobertura_report"/>
+  <import file="build/javadoc.xml"/>
+  <import file="build/cobertura.xml"/>
+
+
+  <!-- =================================================================== -->
+  <!-- init task - setup environment 					   -->
+  <!-- =================================================================== -->
+  <target name="init">
+    <path id="build.classpath">
+      <pathelement path="${build}"/>
+      <fileset dir="${basedir}/lib">
+        <include name="*.jar"/>
+      </fileset>
+    </path>
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+    <taskdef resource="tasks.properties" classpath="">
+      <classpath>
+        <pathelement path="lib/cobertura.jar"/>
+	<path refid="build.classpath"/>
+      </classpath>
+    </taskdef>
+
+    <taskdef resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties">
+      <classpath refid="build.classpath"/>
+    </taskdef>
+    <taskdef name="awc" 
+       classname="org.codehaus.aspectwerkz.compiler.AspectWerkzCTask">
+      <classpath>
+        <pathelement 
+          path="lib/aspectwerkz-2.0.jar"/>
+        <pathelement 
+          path="lib/aspectwerkz-core-2.0.jar"/>
+        <pathelement 
+          path="lib/aspectwerkz-extensions-2.0.jar"/>
+      </classpath>
+    </taskdef>
+    <mkdir dir="${build}"/>
+    <mkdir dir="${cobertura.build}"/>
+    <mkdir dir="dist"/>
+  </target>
+
+
+  <target name="clean">
+      <delete dir="target/"/>
+      <delete dir="junit_out"/>
+      <delete dir="sequencelogs"/>
+      <delete dir="${cobertura.reort}"/>
+      <delete dir="dist"/>
+      <delete dir="testplayerlogs"/>
+      <delete dir="ajdocworkingdir"/>
+      <delete file="user.jar"/>
+      <delete file="cobertura.ser"/>
+      <delete file="ser.dat"/>
+  </target>
+
+  <target name="compile" depends="init"> 
+      <copy todir="${build}/META-INF" flatten="true">
+            <fileset dir="${basedir}/src/main/resources/META-INF/">
+                <include name="*.xml" />
+            </fileset>
+      </copy>
+      <copy todir="${build}" flatten="true">
+            <fileset dir="config">
+                <include name="*.xml" />
+            </fileset>
+      </copy>
+      <copy todir="${build}/com/plexobject/testplayer">
+            <fileset dir="src/main/java/com/plexobject/testplayer">
+                <include name="*.xml" />
+            </fileset>
+      </copy>
+
+<!--
+    <if>
+	<equals arg1="${runtime.aspects}" arg2="true"/>
+	<then>
+    	  <echo>Compiling without aspectJ hooks</echo>
+    	  <javac destdir="${build}" 
+        	deprecation="off" 
+        	debug="on" 
+        	verbose="true"
+        	failonerror="on">
+      	<src path="src/main/java"/>
+      	<classpath refid="build.classpath"/>
+       	<exclude name="**/*.aj"/>
+       	<include name="**/*.java"/>
+    	</javac>  
+	</then>
+	<else>
+
+
+
+skip this begin
+       	<exclude name="**/*Aspect*.java"/>
+          <awc verbose="true"
+                targetdir="${build}"> 
+      	      <classpath refid="build.classpath"/>
+          </awc>
+
+        <property name="weave.classpath" value="${java.home}/../lib/tools.jar${pathseparator}${lib.dir}/ant-1.5.2.jar${pathseparator}${test.classes}${pathseparator}${lib.dir}/aspectwerkz-core-${version}.jar${pathseparator}${lib.dir}/aspectwerkz-${version}.jar${pathseparator}${lib.dir}/aspectwerkz-jdk14-${version}.jar${pathseparator}${lib.dir}/piccolo-1.03.jar${pathseparator}${lib.dir}/qdox-1.4.jar${pathseparator}${lib.dir}/junit-3.8.1.jar${pathseparator}${lib.dir}/dom4j-1.4.jar"/>
+        <java classname="org.codehaus.aspectwerkz.compiler.AspectWerkzC" fork="true" classpath="${weave.classpath}">
+            <jvmarg value="-Daspectwerkz.definition.file=${basedir}/src/main/resources/META-INF/aop.xml"/>
+            <jvmarg value="-Daspectwerkz.transform.verbose=true"/>
+	    <arg value="-verify"/>
+	    <arg value="-verbose"/>
+            <arg value="-genjp"/>
+            <arg value="${test.classes}"/>
+        </java>
+
+        	  source="1.5"
+        	  target="1.5"
+       	  <exclude name="**/*Aspect.java"/>
+        	  srcdir="src/main/aspectj;src/main/java"
+skip this end
+
+
+
+
+
+	</else>
+     </if>
+
+-->
+    	  <echo>Compiling with aspectJ hooks</echo>
+	  <iajc Xreweavable="true" fork="true" maxMem="300m"
+		  destdir="${build}" 
+        	  deprecation="off" 
+        	  source="1.5"
+        	  debug="on" 
+        	  verbose="true"
+        	  showWeaveInfo="true"
+        	  srcdir="src/main/java"
+        	  failonerror="on">
+      	  <classpath refid="build.classpath"/>
+       	  <include name="**/*.aj"/>
+       	  <include name="**/*.java"/>
+    	  </iajc>  
+  </target>
+
+
+  <target name="tree" depends="compile"> 
+      <copy todir="${build}" file="config/log4j.xml"/>
+      <copy todir="${build}" file="config/testplayer.properties"/>
+      <java classname="com.plexobject.testplayer.tree.Tree" fork="yes">
+      <classpath refid="build.classpath"/>
+       <jvmarg value="-Dlog4j.configuration=file:${build}/log4j.xml"/>
+       <arg value="out"/>
+      </java>
+  </target>
+  <target name="run" depends="clean,jar"> 
+      <copy todir="${build}" file="config/log4j.xml"/>
+      <copy todir="${build}" file="config/testplayer.properties"/>
+      <java classname="com.plexobject.testplayer.tools.testgen.TestGenerator" fork="yes">
+      <classpath refid="build.classpath"/>
+       <jvmarg value="-Dlog4j.configuration=file:${build}/log4j.xml"/>
+       <arg value="out"/>
+      </java>
+  </target>
+ 
+  <target name="jar" depends="compile"> 
+    <jar destfile="target/TestPlayer-${testplayer.version}.jar" index="yes">
+    <manifest>
+      <attribute name="Built-By" value="${user.name}"/>
+      <attribute name="Main-Class" value="com.plexobject.testplayer.tools.testgen.TestGenerator" />
+      <attribute name="Restricted-Class-Path" value="component.jar" />
+      <attribute name="Class-Path"
+        value="${lib}/xpp3_min-1.1.3.4.I.jar;${lib}/xstream-SNAPSHOT.jar;${lib}/sequence.jar;${lib}/aspectwerkz-2.0.jar;${lib}/aspectwerkz-core-2.0.jar;${lib}/aspectwerkz-extensions-2.0.jar;${lib}/log4j-1.2.12.jar;${lib}/aspectwerkz-jdk14-2.0.jar;${lib}/aspectwerkz-jdk5-2.0.jar;${lib}/easymock-2.2.jar;${lib}/easymockclassextension-2.2.jar;${lib}/jmock-cglib-1.0.1.jar;${lib}/jmock-1.0.1.jar;${lib}/jakarta-oro-2.0.8.jar;${lib}/asm-1.5.4-snapshot.jar;${lib}/cobertura.jar;${lib/fitnesse.jar;${lib}/fitlibrary.jar;${lib}/jython.jar;${lib}/grinder.jar;"/>
+
+      <attribute name="Specification-Title" value="TestPlayer"/>
+      <attribute name="Specification-Version" value="${testplayer.version}"/>
+      <attribute name="Specification-Vendor" value="PlexObject Solutions, Inc."/>
+      <attribute name="Implementation-Title" value="TestPlayer"/>
+      <attribute name="Implementation-Version" value="${testplayer.version}"/> 
+      <attribute name="Implementation-Vendor" value="PlexObject Solutions, Inc."/>
+
+    </manifest>
+
+      <fileset dir="${build}">
+        <include name="**/*.class"/>
+        <include name="**/*.xml"/>
+      </fileset>
+      <fileset dir="${basedir}/src/main/resources">
+        <include name="**/*"/>
+      </fileset>
+    </jar>
+  </target>
+
+  <target name="dist" depends="jar,zipjavadoc"> 
+<!--
+  <cvspass cvsroot=":pserver:${user.name}@cvs.dev.java.net:/cvs"
+       password="xxxxx"/>
+    <cvs command="update -p" cvsRoot=":pserver:${user.name}@cvs.dev.java.net:/cvs"/>
+    <cvs command="commit -m ${user.name} -r ${testplayer.version}" cvsRoot=":pserver:${user.name}@cvs.dev.java.net:/cvs"/>
+-->
+<!--
+    <exec executable="sh.exe">
+           <arg line="mkbigjar.sh"/>
+    </exec>
+-->
+    <exec executable="sh">
+           <arg line="mkbigjar.sh"/>
+    </exec>
+    <cvs command="tag -r rel-${testplayer.version} testplayer" cvsRoot=":pserver:${user.name}@cvs.dev.java.net:/cvs"/>
+
+    <delete file="dist/TestPlayer-${testplayer.version}-src.zip"/>
+    <zip destfile="dist/TestPlayer-${testplayer.version}-src.zip"
+       basedir=".."
+       includes="**/*"
+       excludes="**/CVS/*, **/dist, **/www/**, **/*.sh, **/extra/**"
+    />
+    <delete file="dist/TestPlayer-${testplayer.version}-bin.zip"/>
+    <zip destfile="dist/TestPlayer-${testplayer.version}-bin.zip"
+       basedir=".."
+       includes="**/*.jar, **/*.xml, **/*.properties"
+       excludes="**/samples/**"
+    />
+    <copy tofile="dist/TestPlayer-${testplayer.version}-docs.zip" file="target/javadocs.zip"/>
+    <copy tofile="dist/TestPlayer-all-${testplayer.version}-jdk14.jar" file="target/TestPlayer-all-${testplayer.version}-jdk14.jar"/>
+    <copy tofile="dist/TestPlayer-all-${testplayer.version}-jdk15.jar" file="target/TestPlayer-all-${testplayer.version}-jdk15.jar"/>
+    <copy tofile="dist/TestPlayer-${testplayer.version}.jar" file="target/TestPlayer-${testplayer.version}.jar"/>
+  </target>
+
+
+  <target name="compile-test" depends="init"> 
+    <javac destdir="${build}" 
+        deprecation="off" 
+        debug="on" 
+        failonerror="on">
+      <src path="src/test/java"/>
+      <classpath refid="build.classpath"/>
+      <include name="**/*.java"/>
+    </javac>  
+  </target>
+
+  <target name="test" depends="compile-test"> 
+    <echo>Running unit tests [runtime.aspects ${runtime.aspects}] cobertura [${net.sourceforge.cobertura.datafile}] data file ${basedir}/cobertura.ser</echo>
+    <mkdir dir="junit_out"/>
+    <junit printsummary="yes" fork="yes" forkmode="once">
+            <sysproperty key="logfile" value="testplayer.log"/>
+            <sysproperty key="testplayer.base.dir" value="${user.home}"/>
+            <sysproperty key="${net.sourceforge.cobertura.datafile}"
+                file="${basedir}/cobertura.ser" />
+            <formatter type="xml"/>
+            <formatter type="brief" usefile="false"/>
+            <jvmarg value="-Dxx.props=/dev/null"/>
+            <classpath>
+                <pathelement path="${cobertura.build}"/>
+                <path refid="build.classpath"/>
+            </classpath>
+            <batchtest fork="yes" todir="${basedir}/junit_out">
+                <fileset dir="${cobertura.build}">
+                    <include name="**/*Test.class"/>
+                </fileset>
+                <fileset dir="${build}">
+                    <include name="**/*Test.class"/>
+                </fileset>
+            </batchtest>
+     </junit>
+     <junitreport todir="${basedir}/junit_out">
+	  <fileset dir="${basedir}/junit_out">
+	    <include name="TEST-*.xml"/>
+	  </fileset>
+	  <report format="frames" todir="${basedir}/junit_out"/>
+     </junitreport>
+  </target>
+
+<!--
+            sourcepath="src/main/java/"
+-->
+  <target name="junitdoclet" depends="compile">
+        <javadoc
+            packagenames="com.*"
+            defaultexcludes="yes"
+            doclet="com.objectfab.tools.junitdoclet.JUnitDoclet"
+            docletpathref="build.classpath"
+            additionalparam="-d src/test/java -buildall -source 1.4">
+      	    <classpath refid="build.classpath"/>
+    <packageset dir="src/main/java" defaultexcludes="yes">
+      <include name="com/plexobject/testplayer/plugin/test/unit/**"/>
+    </packageset>
+    </javadoc>
+  </target>
+
+
+  <target name="savant" depends="clean,compile">
+      <copy todir="${build}" file="config/log4j.xml"/>
+      <copy todir="${build}" file="config/testplayer.properties"/>
+      <java classname="com.plexobject.testplayer.generator.SavantDepsGenerator" fork="yes"
+	classpathref="build.classpath">
+       <jvmarg value="-Dlog4j.configuration=file:${build}/log4j.xml"/>
+       <arg value="out"/>
+      </java>
+  </target>
+
+
+  <target name="method" depends="compile">
+      <delete dir="testplayerlogs"/>
+      <copy todir="${build}" flatten="true">
+            <fileset dir="config">
+                <include name="*.properties" />
+            </fileset>
+      </copy>
+     <copy tofile="./testplayer.db.properties" file="config/testplayer.db.properties"/>
+     <copy tofile="./testplayer.db.script" file="config/testplayer.db.script"/>
+<!--
+      <java classname="com.plexobject.testplayer.dao.hibernate.MethodDaoHibernate" fork="yes"
+      <java classname="com.plexobject.testplayer.dao.jdbc.MethodDaoJdbc" fork="yes"
+       <jvmarg value="-javaagent:lib/aspectjweaver.jar"/>
+       <jvmarg value="-Dorg.aspectj.weaver.showWeaveInfo=true"/>
+      <java classname="com.plexobject.testplayer.dao.hibernate.MethodDaoHibernate" fork="yes"
+-->
+      <java classname="com.plexobject.testplayer.dao.hibernate.MethodStatsDaoHibernate" fork="yes"
+	classpathref="build.classpath">
+       <jvmarg value="-Djava.library.path=lib"/>
+       <jvmarg value="-Dlog4j.configuration=file:${build}/log4j.xml"/>
+      </java>
+  </target>
+
+
+
+  <target name="deps" depends="compile">
+      <java classname="com.plexobject.testplayer.tools.DepsGrapher" fork="yes"
+	classpathref="build.classpath">
+       <jvmarg value="-Dlog4j.configuration=file:config/log4j.xml"/>
+	<arg value="-m"/>
+	<arg value="com.plexobject.testplayer"/>
+	<arg value="-r"/>
+	<arg value="-o"/>
+	<arg value="deps1.dot"/>
+	<arg value="-pp"/>
+	<arg value="com.plexobject.testplayer.ApplicationContext"/>
+	<arg value="com.plexobject.testplayer.events.MethodPluginDispatcher"/>
+	<arg value="com.plexobject.testplayer.plugin.dot.AssociationPlugin"/>
+	<arg value="com.plexobject.testplayer.plugin.dot.PackageDependencyPlugin"/>
+	<arg value="com.plexobject.testplayer.plugin.dot.SavantDepsPlugin"/>
+	<arg value="com.plexobject.testplayer.plugin.test.functional.FunctionalTestPlugin"/>
+	<arg value="com.plexobject.testplayer.plugin.test.integration.IntegrationTestPlugin"/>
+	<arg value="com.plexobject.testplayer.plugin.test.NamingStrategy"/>
+	<arg value="com.plexobject.testplayer.plugin.test.regression.RegressionDataBuilder"/>
+	<arg value="com.plexobject.testplayer.plugin.test.TestingStrategy"/>
+	<arg value="com.plexobject.testplayer.plugin.test.unit.UnitTestPlugin"/>
+	<arg value="com.plexobject.testplayer.plugin.test.WritingStrategy"/>
+	<arg value="com.plexobject.testplayer.plugin.uml.PerformanceStatsPlugin"/>
+	<arg value="com.plexobject.testplayer.runner.regression.RegressionRunner"/>
+      </java>
+      <exec executable="C:\\Program Files\\ATT\\Graphviz\\bin\\dot.exe">
+           <arg line="-Tgif deps1.dot -o dist/TestPlayer-${testplayer.version}-compile-deps.gif"/>
+      </exec>
+      <java classname="com.plexobject.testplayer.tools.DepsGrapher" fork="yes"
+	classpathref="build.classpath">
+       <jvmarg value="-Dlog4j.configuration=file:config/log4j.xml"/>
+	<arg value="-m"/>
+	<arg value="com.plexobject.testplayer"/>
+	<arg value="-r"/>
+	<arg value="-o"/>
+	<arg value="deps2.dot"/>
+	<arg value="-pp"/>
+	<arg value="com.plexobject.testplayer.runner.performance.PerformanceLoader"/>
+	<arg value="com.plexobject.testplayer.runner.performance.PerformanceRunner"/>
+	<arg value="com.plexobject.testplayer.runner.regression.RegressionLoader"/>
+	<arg value="com.plexobject.testplayer.runner.regression.RegressionRunner"/>
+      </java>
+      <exec executable="C:\\Program Files\\ATT\\Graphviz\\bin\\dot.exe">
+           <arg line="-Tgif deps2.dot -o deps2.gif"/>
+      </exec>
+  </target>
+
+</project>

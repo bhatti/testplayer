@@ -1,0 +1,150 @@
+.code {
+  overflow: auto;
+  padding: 5px;
+  border: 1px #cccccc solid;
+}
+
+body {
+  margin:0;
+  padding:40px 20px;
+	background-color:		#FFFFFF;
+	background-image:		url(gradient.jpg);
+	background-repeat:	no-repeat;				
+	color:							#666666;
+	font-family:				arial, sans;
+	font-size:					100%;
+	line-height:				1.7em;
+	margin:							1em 2em;
+}
+
+h1 {
+font-size: 					2.18em;
+letter-spacing:			-0.01em;
+}			
+			
+h2 {
+	font-size: 					1.45em;
+	letter-spacing:			-0.02em;
+}
+
+a:link {
+	color:							#669966;
+	}
+
+a:visited {
+	color:							#336633;
+}
+
+a:hover {
+	text-decoration:		none;
+	color:				#FFFFFF;
+	background-color:		#669966;
+}
+						
+	ul.navigation {
+	background-color:		#333333;
+	padding:						0em 0.5em;
+	list-style-type:		none;
+}
+			
+ul.navigation li {
+	border-right:				1px solid #666666;
+	display:						inline;			
+}
+			
+.navigation a {
+	color:							#FFFFFF;
+	padding:						0.5em;
+}
+			
+.description {
+font-size:					1.2em;
+}	
+			
+strong {
+background-color:		#FFFF99;
+}
+			
+#bottom {
+	border-top:					2px solid #333333;
+	margin-top:					1em;
+	padding-top:				1em;
+}
+			
+ul.weighted {
+	list-style-type:		none;
+	margin:			        0;
+	padding:		        0;
+	text-align:             justify;
+}
+			
+ul.weighted li {
+	display:				inline;
+	margin:			        0;
+	margin-right:           0.6em;
+}
+						
+ul.weighted li.level0 {	font-size:	1em; }
+ul.weighted li.level1 {	font-size:	1.1em;	}
+ul.weighted li.level2 {	font-size:	1.21em;	}
+ul.weighted li.level3 {	font-size:	1.33em;	}
+ul.weighted li.level4 {	font-size:	1.46em;	}
+ul.weighted li.level5 {	font-size:	1.61em;	}
+ul.weighted li.level6 {	font-size:	1.77em;	}
+ul.weighted li.level7 {	font-size:	1.95em;	}
+ul.weighted li.level8 {	font-size:	2.14em;	}
+ul.weighted li.level9 {	font-size:	2.36em;	}			
+ul.weighted li {
+line-height:			1em;			
+}	
+
+a img {
+  border-width:0;
+}
+
+         .app H3  { clear:   none; }
+         .axial   { display: none; }
+         #apphead { display: none; }
+
+
+
+
+
+
+
+
+ #navlist
+{
+padding: 0 1px 1px;
+margin-left: 0;
+font: bold 12px Verdana, sans-serif;
+background: gray;
+width: 13em;
+}
+
+#navlist li
+{
+list-style: none;
+margin: 0;
+border-top: 1px solid gray;
+text-align: left;
+}
+
+#navlist li a
+{
+display: block;
+padding: 0.25em 0.5em 0.25em 0.75em;
+border-left: 1em solid #AAB;
+background: #CCD;
+text-decoration: none;
+}
+
+#navlist li a:link { color: #669966; }
+#navlist li a:visited { color: #336633; }
+
+#navlist li a:hover
+{
+border-color: #FE3;
+color:				#FFFFFF;
+background-color:		#669966;
+}

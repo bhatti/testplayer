@@ -1,0 +1,193 @@
+<html>
+<head>
+
+<title>TestPlayer - Automated Test Harness Toolkit</title>
+<meta name="Keywords" content="unit testing, regression testing, functional testing, blackbox testing, legacy applications, Java, aspect oriented programming, aspectJ, aspectwerkz, AOP, UML, TestNG, JUnit, Assertion Extension, Fit, FitNesse, Sequence diagrams">
+<meta name="Description" content="A toolkit for converting legacy and untested Java applications into properly tested and high quality applications">
+<meta name="Author" content="Shahzad Bhatti">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="default.css" rel="stylesheet" type="text/css">
+
+
+<script>
+ var ld = document.getElementById("ownermessage");
+ ld.parentNode.removeChild(ld);
+ ld = document.getElementById("longdescription");
+ for (n=ld.firstChild; n!=null; n=n.nextSibling) {
+   if (n.nodeType==1 && n.innerHTML=="Description") {
+     n.innerHTML = "TestPlayer - Automated Test Harness Generator";
+     //n.parentNode.removeChild(n);
+     break;
+   }
+ }
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<div align="center">
+<a href="http://testplayer.dev.java.net/"><img src="images/logo.jpg" width="468" height="60" border="0"></a>
+
+		
+<ul class="navigation">
+<li><a href="http://testplayer.dev.java.net">Home</a></li>
+<li><a href="http://testplayer.dev.java.net/#download">Download</a></li>
+<li><a href="http://testplayer.dev.java.net/docs.html">Documentation</a></li>
+<!--
+<li><a href="http://testplayer.dev.java.net/bin/view/Main/WebHome">Wiki</a></li>
+<li><a href="http://weblogs.java.net">Blogs</a></li>
+-->
+<li><a href="http://testplayer.dev.java.net/servlets/ProjectForumView">Forums</a></li>
+<li><a href="http://testplayer.dev.java.net/faq.html">FAQ</a></li>
+<li><a href="http://testplayer.dev.java.net/changelog.html">Change Log</a></li>
+</ul>
+
+</div>
+
+
+
+
+
+<a name="#vision">
+<h4>Vision Statement</h4></a>
+<p>
+<quote>
+Improve software quality and facilitate understanding of the software applications by creating automated test harness, generating documentation and providing
+feedback with quality metrices.
+</quote>
+
+
+<a name="#mission">
+<h4>Mission Statement</h4></a>
+<quote>
+<ul>
+<li>Improve reliability and quality of both existing and new software applications.
+<li>Develop an easily extendable and efficient framework that is easy to maintain. The framework will be based on plugable architecture to add capability for adding test, metrices and documentation builders. 
+<li>Identify performance bottlenecks by capturing key performance areas of the system such as throughput, response time and latency related metrices.
+<li>Integrate with other software quality metrices that provide feedback on software quality and test coverage.
+</ul>
+</quote>
+
+
+
+<a name="#download">
+<h4>Download</h4></a>
+Latest version of TestPlayer is 0.9 that you can download directly below. In order to download older versions, select "Document & files" from side menu and then download old distribution files.
+<ul>
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/39304/TestPlayer-0.9-bin.zip">TestPlayer-0.9 Binary Jar File</a></li>
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/39305/TestPlayer-0.9-src.zip">TestPlayer-0.9 Source Zip File</a></li>
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/39306/TestPlayer-0.9-docs.zip">TestPlayer-0.9-docs.zip JavaDocs and Code in HTML format</a></li>
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/30201/TestPlayer-0.8-fitnesse-example.zip">TestPlayer-0.8-fitnesse-example Sample FitNesse Code</a></li>
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/28444/TestPlayer-0.8-fitnesse.zip">TestPlayer-0.8-fitnesse FitNesse Installation along with Sample FitNesse Code</a></li>
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/30202/TestPlayer-0.8-sample.zip">Sample Code along with generated tests</a></li>
+<!--
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/28448/TypesPerformanceStats.png">Sample Performance Stats UML Sequence Diagram</a></li>
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/28449/TypesSequence.png">Sample UML Sequence Diagram</a></li>
+-->
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/23653/sample-sequence.png">Sample UML Sequence Diagram</a></li>
+  <li><a href="https://testplayer.dev.java.net/files/documents/4223/30215/TestPlayer-0.8-compile-deps.gif">Compile-time Dependency Diagram</a></li>
+</ul>
+
+
+<a name="#abstract">
+<h4>Abstract</h4></a>
+TestPlayer is AOP based toolkit that produces <a href="http://en.wikipedia.org/wiki/Characterization_Test">
+characterization tests</a> and documentation for legacy Java applications. It generates 
+unit, integration, functional, acceptance, regression, timed and performance tests by simply running 
+the application without any modifiction. In addition, it generates depedency 
+diagrams and UML sequence diagrams that help understand dependency 
+between different components of the software. The goal of TestPlayer is to 
+improve software quality and teach writing tests by showing working examples 
+from existing codebase.
+
+<a name="#introduction">
+<h4>Introduction</h4></a>
+Most software has longer lifecycle than original intention. There is abundant 
+software produced before higher emphasis on unit testing. In most cases, 
+a software written without unit testing is harder and more expensive to change.
+TestPlayer toolkit helps legacy Java applications, i.e., applications without
+test coverage by automatically generating unit tests and converting 
+collaborating services into mocks. It requires no changes to the application
+and only requires that user starts the application and performs a set of usage
+scenarios. In TestPlayer terminology, this is referred to as playing the
+application. This technique is somewhat similar to some record-and-play 
+tools that records GUI interaction of an application and then plays back
+the recorded data for performing regression or functional testing. However,
+that approach uses end to end black box testing and is a fragile because
+every time the interface changes, the user will have to rerecord the use cases.
+As opposed to black-box testing by recording the input and output 
+at the external end only, TestPlayer records dynamic behavior
+of each public method that is invoked as part of usage scenario.
+In addition, it keeps track of all services that a class 
+is collaborating. This data is then used to create mocks for all 
+collaborating services. TestPlayer uses jMock for mocking collaborating
+services, which supports mocking both interfaces and concrete classes.
+<p>
+
+<a name="#features">
+<h4>Major Features</h4></a>
+<ul>
+<li>Generates automated Unit Tests (using JUnit 3.8, 4.0 and TestNG 5.0) along with mocks (jMock 1.2 and EasyMock 2.2) for dependent classes.
+<li>Generates automated Integration and Functional Tests (using JUnit 3.8, 4.0 and TestNG 5.0). 
+<li>Generates automated Functional Tests using FitNesse. 
+<li>Records all data about public method invocation, which is used for regression, load and performance tests.
+<li>Generates compile time and runtime method-level, class-level and package-level dependencies.
+<li>Draws UML Sequence diagrams for all top-level methods to facilitate understanding of the system and debugging.
+<li>Draws compile time and runtime association and dependency diagrams that facilitate writing tests and understanding the system.
+<li>Provides feedback on software quality metrices and test coverage by integrating with various softwares such as cobertura, PMD, CheckStyle, Lint, FindBugs, JDepend, etc.
+</ul>
+
+
+
+<p>
+
+
+<a name="#todo">
+<h4>Backlog of Features to be done</h4></a>
+<ul>
+<li>Move from ant to maven
+<li>Finish architecture and tutorial document.
+<li>Write more sample applications with coverage metrices
+<li>Use velocity for templates for code generation
+<li>Integrate with Grinder for load test.
+<li>Offer advice of coverage and quality using reports from cobertura, PMD, CheckStyle, Lint, FindBugs, JDepend, etc.
+<li>Add a centralized server that uses JMX to collect statistics (Spring/JMX/Mule). Convert Events into ESB based messages. 
+<li>Add ability to merge calls in a distributed environment. Collect metrices from end-to-end execution combininig all distributed calls.
+<li>Merge generated tests and regression data with existing test suites and data.
+</ul>
+
+
+<a name="#owner">
+<h4>Project Owner</h4></a>
+<p>
+<b>Name:</b> Shahzad Bhatti<br>
+<b>Email:</b> 
+<script language=javascript>
+<!--
+var username = "bhatti";
+var hostname = "plexbject.com";
+document.write("<a href=" + "mail" + "to:" + username + "@" + hostname +
+        ">" + username + "@" + hostname + "</a>")
+//-->
+</script>
+<br>
+<b>URL:</b> <a href="http://www.plexobject.com/~bhatti">http://www.plexobject.com/~bhatti</a>
+<br>
+<h4>Joining TestPlayer Project</h4>
+<p>
+<b>Beta Testers:</b> 
+<br>
+Though, TestPlayer is in early phase of development, anyone who
+wants to try out the project on their system is welcome. Any feedback or
+suggestions is greatly appreciated.
+<p>
+
+<b>Developers:</b>
+<br>
+ Ideally, we are looking for developers with a lot of 
+experience with unit testing, aspect oriented programming and 
+experience with building large complexed systems. However, anyone with
+enthusiastic attitude towards contributing to this project is also welcome.
+
+</body>
+
+</html>

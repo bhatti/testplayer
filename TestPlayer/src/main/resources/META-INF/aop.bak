@@ -1,0 +1,46 @@
+<!DOCTYPE aspectwerkz PUBLIC
+    "-//AspectWerkz//DTD//EN"
+    "http://aspectwerkz.codehaus.org/dtd/aspectwerkz2.dtd">
+<!--http://aspectwerkz.codehaus.org/xml_definition.html-->
+<aspectwerkz>
+    <system id="testplayer">
+            <aspect class="com.plexobject.testplayer.aspects.CallInterceptorAspect" deployment-model="perJVM">
+                <pointcut name="adviceCflow" expression="cflow(adviceexecution())"/> <!-- pattern=-->
+                <pointcut name="scope" expression="!within(com.plexobject.testplayer..*)"/>
+                <pointcut name="userCalls" expression="(call(public * *(..)) OR call(public *.new(..))) AND scope"/>
+                <pointcut name="topCall" expression="userCalls AND !cflowbelow(userCalls)"/>
+                <advice name="traceMethod(JoinPoint)" type="around" bind-to="userCalls"/>
+                <advice name="cleanStack(StaticJoinPoint)" type="after" bind-to="topCall"/>
+            </aspect>
+
+    </system>
+</aspectwerkz>
+<!--mixin class="com.handyware.aop.LoggableImpl" 
+  deployment-model="perClass"
+  bind-to="within(com.tss..*) 
+            AND avoidTrace"/
+<aspectj>
+   <aspects>
+      <aspect name="com.plexobject.testplayer.aspects.UserApplicationAspect"/>
+   </aspects>
+   <weaver options="-XlazyTjp -showWeaveInfo">
+     <include within="graph.*"/>
+     <include within="com.plexobject.mini.*"/>
+     <exclude within="com.plexobject.testplayer.*"/>
+     <exclude within="javax.*"/>
+     <exclude within="org.aspectj.*"/>
+   </weaver>
+</aspectj>
+
+--> 
+
+<!--
+            <aspect class="com.plexobject.testplayer.aspects.CallInterceptorAspect" deployment-model="perJVM">
+                <pointcut name="adviceCflow" expression="cflow(adviceexecution())"/> <!-- pattern=-->
+                <pointcut name="scope" expression="!within(com.plexobject.testplayer..*)"/>
+                <pointcut name="userCalls" expression="(call(public * *(..)) OR call(public *.new(..))) AND scope"/>
+                <pointcut name="topCall" expression="userCalls AND !cflowbelow(userCalls)"/>
+                <advice name="traceMethod(JoinPoint)" type="around" bind-to="userCalls"/>
+                <advice name="cleanStack(StaticJoinPoint)" type="after" bind-to="topCall"/>
+            </aspect>
+-->

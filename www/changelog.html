@@ -1,0 +1,117 @@
+<html>
+<head>
+
+<title>TestPlayer - Automated Test Harness Toolkit</title>
+<meta name="Keywords" content="unit testing, regression testing, functional testing, blackbox testing, legacy applications, Java, aspect oriented programming, aspectJ, aspectwerkz, AOP, UML, TestNG, JUnit, Assertion Extension, Fit, FitNesse, Sequence diagrams">
+<meta name="Description" content="A toolkit for converting legacy and untested Java applications into properly tested and high quality applications">
+<meta name="Author" content="Shahzad Bhatti">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="default.css" rel="stylesheet" type="text/css">
+
+
+<script>
+ var ld = document.getElementById("ownermessage");
+ ld.parentNode.removeChild(ld);
+ ld = document.getElementById("longdescription");
+ for (n=ld.firstChild; n!=null; n=n.nextSibling) {
+   if (n.nodeType==1 && n.innerHTML=="Description") {
+     n.innerHTML = "TestPlayer - Automated Test Harness Generator";
+     //n.parentNode.removeChild(n);
+     break;
+   }
+ }
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<div align="center">
+<a href="http://testplayer.dev.java.net/"><img src="images/logo.jpg" width="468" height="60" border="0"></a>
+
+		
+<ul class="navigation">
+<li><a href="http://testplayer.dev.java.net">Home</a></li>
+<li><a href="http://testplayer.dev.java.net/#download">Download</a></li>
+<li><a href="http://testplayer.dev.java.net/docs.html">Documentation</a></li>
+<!--
+<li><a href="http://testplayer.dev.java.net/bin/view/Main/WebHome">Wiki</a></li>
+-->
+<li><a href="http://testplayer.dev.java.net/servlets/ProjectForumView">Forums</a></li>
+<li><a href="http://testplayer.dev.java.net/faq.html">FAQ</a></li>
+<li><a href="http://testplayer.dev.java.net/changelog.html">Change Log</a></li>
+</ul>
+
+</div>
+
+
+<a name="#changelog">
+<h4>Change Log</h4></a>
+<p>
+<table class="table-grid" width="800">
+	<tr>
+		<td class="grid-cell">September 10, 2005</td>
+		<td class="grid-cell">Started Project
+			<ul>
+			<li>Defined initial scope and requirements
+			<li>Defined initial architecture
+			<li>Started working on the project
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td class="grid-cell">November 30, 2005</td>
+		<td class="grid-cell">Release 0.1 version
+			<ul>
+			<li>Design and code core system
+			<li>Added plugins for integration and unit tests.
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td class="grid-cell">December 31, 2005</td>
+		<td class="grid-cell">Release 0.2 version
+			<ul>
+			<li>Added mock supports for unit-tests
+			<li>Added plugins for sequence diagrams
+			<li>Fixed bugs with generated code
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td class="grid-cell">Jan 31, 2006</td>
+		<td class="grid-cell">Release 0.5 version
+			<ul>
+			<li>Added plugins for Fitnesse-based functional testing
+			<li>Added support of XStream based marshalling for preserving test states.
+			<li>Added support for generating diagrams for runtime dependencies.
+			<li>Wrote a small test application.
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td class="grid-cell">February 28, 2006</td>
+		<td class="grid-cell">Release 0.8 version
+			<ul>
+			<li>Added support for data-driven/parameter-based regression testing
+			<li>Added support for load and timed testing
+			<li>Added support for generating diagrams for compile-time dependencies.
+			<li>Added support of TestNG 4.0 and JUnit 4.0
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<td class="grid-cell">June 3, 2006</td>
+		<td class="grid-cell">Release 0.9 version
+			<ul>
+			<li>Upgraded xstream to 1.2
+			<li>Added support for TestNG 5.0
+			<li>Added support for EasyMock 2.2
+			<li>Added support for JDK 1.5 Annotations in TestNG 5.0 and JUnit 4.0
+			<li>Added better support for declaring fixtures in unit tests.
+			<li>Created one-big jar files for JDK-1.4 and JDK-1.5 so that clients can easily import everything.
+			</ul>
+		</td>
+	</tr>
+</table>
+</body>
+
+</html>

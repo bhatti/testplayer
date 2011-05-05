@@ -1,0 +1,33 @@
+<!-- =================================================================== -->
+<!--         Generates PMD Report 					 -->
+<!-- =================================================================== -->
+
+<project name="pmd">
+    <target name="pmd">
+        <taskdef name="pmd"
+            classname="net.sourceforge.pmd.ant.PMDTask"
+            classpathref="pmd.deps"/>
+
+        <pmd rulesetfiles="rulesets/basic.xml,rulesets/braces.xml,rulesets/clone.xml,rulesets/codesize.xml,rulesets/controversial.xml,rulesets/coupling.xml,rulesets/design.xml,rulesets/favorites.xml,rulesets/finalizers.xml,rulesets/imports.xml,rulesets/javabeans.xml,rulesets/junit.xml,rulesets/logging-java.xml,rulesets/naming.xml,rulesets/newrules.xml,rulesets/strictexception.xml,rulesets/strings.xml,rulesets/unusedcode.xml" 
+            failOnRuleViolation="true" 
+            failOnError="false"
+            printToConsole="true">
+            <formatter type="xml" toFile="${target.dir}/pmd_report.xml"/>
+            <fileset dir="${src.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+        </pmd>
+    </target>
+
+    <target name="cpd">
+        <taskdef name="cpd"
+            classname="net.sourceforge.pmd.cpd.CPDTask"
+            classpathref="pmd.deps"/>
+        <cpd minimumTokenCount="100" outputFile="${target.dir}/cpd_report.txt">
+            <fileset dir="${src.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+        </cpd>
+    </target>
+
+</project>

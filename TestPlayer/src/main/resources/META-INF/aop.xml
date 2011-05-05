@@ -1,0 +1,13 @@
+<aspectj>
+    <weaver>
+      <exclude within="org.springframework.jmx..*"/>
+      <exclude within="net.sf.cglib..*)"/>
+    </weaver>
+    <aspects>
+<!--
+	<concrete-aspect name="com.plexobject.aspect.PlayerAspect" extends="com.plexobject.testplayer.aspects.CallInterceptorAspect" deployment-model="perJVM">
+                <pointcut name="scope" expression="within(graph..*) AND !within(net.sf.cglib..*)"/>
+        </concrete-aspect>
+-->
+    </aspects>
+</aspectj>

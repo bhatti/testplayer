@@ -1,0 +1,30 @@
+<!-- =================================================================== -->
+<!--         FindBugs 							 -->
+<!-- =================================================================== -->
+
+<project name="findbugs">
+    <target name="findbugs" depends="" description="">
+        <taskdef name="findbugs"
+            classname="edu.umd.cs.findbugs.anttask.FindBugsTask">
+            <classpath refid="findbugs.antpath.deps"/>
+        </taskdef>
+        <property name="findbugs.classes.dir" value="${dir.compile}"/>
+        <mkdir dir="${target.dir}"/>
+
+        <findbugs  
+            output="html"
+            outputFile="${target.dir}/findbugs-report.html" 
+            conservespace="false"
+            jvmargs="-Xms512m -Xmx512m"
+            timeout="60000000"
+            failOnError="true"
+            effort="max"
+            reportLevel="low"
+            pluginList="${findbugs.plugins}">
+            <classpath refid="findbugs.classpath.deps"/>
+            <sourcePath path="${findbugs.src.dir}"/>
+            <class location="${findbugs.classes.dir}"/>
+            <auxClasspath refid="findbugs.aux.class.path"/>
+        </findbugs>
+    </target>
+</project>

@@ -1,0 +1,46 @@
+	*** TestPlayer(tm) - Automated Test Harness Toolkit ***
+	TestPlayer v0.5, released January 31, 2006
+
+Thank you for downloading TestPlayer. Please send questions or suggestions to 
+bhatti@plexobject.com.
+
+This software is released under GNU General Public License. 
+
+This release includes following files and directories:
+
+
+Readme.txt     : This file.  
+GPL.txt        : GNU GPL. 
+samples	       : sample applications
+TestPlayer     : source code
+TestPlayer/lib : TestPlayer jars and dependent jar files
+www            :
+
+
+Installation Requirements:
+ - Install Java 1.4+ from java.sun.com. Set JAVA_HOME and add java's bin 
+	directory to your path.
+ - Install ant from ant.apache.org. Set ANT_HOME and add ant's bin 
+	directory to your path. 
+  Optionally:
+    - Download antcontrib.jar from http://ant-contrib.sourceforge.net/ and 
+	copy it to your ANT_HOME's lib directory.
+    - Install maven 2.0 from maven.apache.org. Set MAVEN_HOME and add maven's
+	bin directory to your path.
+ - For Testing Fitnesse Tests, 
+   - install FitNesse from http://fitnesse.org/FitNesse.DownLoad
+
+ - cvs -d :pserver:yourid@cvs.dev.java.net:/cvs login 
+ - cvs -d :pserver:yourid@cvs.dev.java.net:/cvs checkout testplayer
+ - Open Shell and type
+     	cd TestPlayer
+ - To compile source code and build jar file using ant, type
+	ant 
+ - To test a small built-in application
+        cd ../samples/mini
+	ant
+ - View source code and UML diagrams created in src/test folder
+ - To run junit tests just created, run
+	ant test
+ - View Junit Report in junit_out folder
+

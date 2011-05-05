@@ -1,0 +1,186 @@
+<html>
+<head>
+
+<title>TestPlayer - Automated Test Harness Toolkit</title>
+<meta name="Keywords" content="unit testing, regression testing, functional testing, blackbox testing, legacy applications, Java, aspect oriented programming, aspectJ, aspectwerkz, AOP, UML, TestNG, JUnit, Assertion Extension, Fit, FitNesse, Sequence diagrams">
+<meta name="Description" content="A toolkit for converting legacy and untested Java applications into properly tested and high quality applications">
+<meta name="Author" content="Shahzad Bhatti">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<link href="default.css" rel="stylesheet" type="text/css">
+
+
+<script>
+ var ld = document.getElementById("ownermessage");
+ ld.parentNode.removeChild(ld);
+ ld = document.getElementById("longdescription");
+ for (n=ld.firstChild; n!=null; n=n.nextSibling) {
+   if (n.nodeType==1 && n.innerHTML=="Description") {
+     n.innerHTML = "TestPlayer - Automated Test Harness Generator";
+     //n.parentNode.removeChild(n);
+     break;
+   }
+ }
+</script>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<div align="center">
+<a href="http://testplayer.dev.java.net/"><img src="images/logo.jpg" width="468" height="60" border="0"></a>
+
+		
+<ul class="navigation">
+<li><a href="http://testplayer.dev.java.net">Home</a></li>
+<li><a href="http://testplayer.dev.java.net/#download">Download</a></li>
+<li><a href="http://testplayer.dev.java.net/docs.html">Documentation</a></li>
+<!--
+<li><a href="http://testplayer.dev.java.net/bin/view/Main/WebHome">Wiki</a></li>
+-->
+<li><a href="http://testplayer.dev.java.net/servlets/ProjectForumView">Forums</a></li>
+<li><a href="http://testplayer.dev.java.net/faq.html">FAQ</a></li>
+<li><a href="http://testplayer.dev.java.net/changelog.html">Change Log</a></li>
+</ul>
+
+</div>
+
+
+
+
+
+<a name="#introduction">
+<h4>Introduction</h4></a>
+TestPlayer is AOP based toolkit that produces tests and documentation for
+legacy Java applications. It generates unit, integration, functional,
+acceptance, regression, timed and performance tests by simply running 
+the application without any modifiction. In addition, it generates depedency 
+diagrams and UML sequence diagrams that help understand dependency 
+between different components of the software. The goal of TestPlayer is to 
+improve software quality and teach writing tests by showing working examples 
+from existing codebase.
+
+
+<a name="#problem">
+<h4>Problem Statement</h4></a>
+Though, testing has always been integral part of software development 
+lifecycle. But for a long time it was left for lowly QA folks at the end 
+of software cycle. With the popularirty of agile methodologies such as XP
+and Test Driven Development, testing has become focal part of software
+iteration. Unfortunately, despite increasingly role of testing in development,
+there remains a large number of existing projects without proper unit tests
+or any other kind of tests. Many organizations still rely on tedious manual
+testing. The result of this is that many bugs creep into the software or
+discovered late in the software lifecycle. It is generally accepted that
+cost of fixing bug late in the project cost manifold than fixing it early.
+Despite these benefits, poor quality software is rampant and both customers
+and companies pay for this in higher maintenance and support cost. 
+In many organizations, the emphasis is on shipping most features. In such
+organizations, when projects fail to balance scope, schedule and budget, they 
+sacrifice quality at the end. Due to time constraints, developers lack 
+resources and time to produce high quality software.
+<p>
+Most software has longer lifecycle than original intended. There is abundant 
+software produced before incorporating unit testing as part of software 
+development. In most cases, a software written without unit testing is 
+harder to change. Though, there are a number of different testing
+schemes, but unit testing is most common. Unit testing performs testing of
+a single component in isolation. However, existing software often is 
+very tightly coupled and difficult to test in isolation. Though, there are
+number of testing tools such as JUnit, TestNG and mock libraries, however
+these tools require developers to take time and refactor existing code and
+write unit tests. There aren't many tools that help developers take the 
+pain of writing unit tests. Though, there are a number of tools that 
+provide some assistance such as simple boundary tests, gui based 
+functional testing, explaratory or random testing. But none of those tools
+offer support thorough support for testing or support white box testing 
+and testing in isolation as required by unit testing.
+<p>
+
+As integration or functional testing use black box testing, it is 
+difficult to test an module in an isolation. 
+As opposed to these approaches, unit testing tests a single class or module
+in an isolation using white box techniques. In general unit testing uses mocks
+to abstract collaborating modules such as external services or database
+connections. This also help making unit testing an indispensable part
+of the software development cycle, because developers don't require to
+run real database servers or external services and help expediate development
+cycle. Also, running suite of unit tests takes a lot less time than running
+suite of integration tests so they can be run more often after each incremental
+change to the code. 
+<a name="#solution">
+<h4>Proposed Solution</h4></a>
+<p>
+<p>
+TestPlayer toolkit helps legacy Java applications, i.e., applications without
+tests add testing capabilities seamlessly without any changes to existing
+applications and minimal configuration. It requires no changes to the 
+application and supports both graphical interactive and non-interactive
+applications. For interactive applications, users will be drive application
+GUI to record usage scenarios. For non-interactive application, user will 
+start the driver application that invokes application behavior. In TestPlayer 
+terminology, this is referred to as playing the application. Though, recording
+application behavior from the graphical interaction is somewhat similar to 
+some record-and-play tools that records GUI interaction of an application 
+and then plays back the recorded data for performing regression 
+or functional testing. However, that approach uses end to end black box 
+testing and is a fragile because every time the interface changes, the user 
+will have to rerecord the use cases. As opposed to black-box testing 
+by recording the input and output at the external end only, TestPlayer 
+records dynamic behavior of each public method that is invoked as part of 
+usage scenario. In addition, it keeps track of all services that a class 
+is collaborating. This data is then used to create mocks for all 
+collaborating services. TestPlayer uses jMock and EasyMock for mocking 
+collaborating services. These mock libraries support mocking both interfaces 
+and concrete classes.  
+<p>
+
+<a name="#features">
+<h4>Major Features</h4></a>
+<ul>
+<li>Generates automated Unit Tests (using JUnit 3.8, 4.0 and TestNG 5.0) along with mocks (jMock 1.2 and EasyMock 2.2) for dependent classes.
+<li>Generates automated Integration and Functional Tests (using JUnit 3.8, 4.0 and TestNG 5.0). 
+<li>Generates automated Functional Tests using FitNesse. 
+<li>Records all data about public method invocation, which is used for regression, load and performance tests.
+<li>Generates compile time and runtime method-level, class-level and package-level dependencies.
+<li>Draws UML Sequence diagrams for all top-level methods to facilitate understanding of the system and debugging.
+<li>Draws compile time and runtime association and dependency diagrams that facilitate writing tests and understanding the system.
+<li>Provides feedback on software quality metrices and test coverage by integrating with various softwares such as cobertura, PMD, CheckStyle, Lint, FindBugs, JDepend, etc.
+</ul>
+
+
+
+<a name="#design">
+<h4>Design of TestPlayer</h4></a>
+TestPlayer is designed based on event based and plugin architecture. Currently,
+it supports eight plugins for generating unit tests, integration tests,
+functional tests, regression tests, timed tests, performance tests, 
+package/class dependency diagrams and UML sequence diagrams. These plugins
+are externally controlled and can be turned off/on with simple configuration.
+This configuration is also used to add 3rd party plugins. TestPlayer uses
+aspect-oriented programming to trace through execution of the application.
+The user specifies package names of the classes that the user is interested
+is and TestPlayer monitors all public methods from those packages. Though,
+TestPlayer uses AOP to listen for method invocations, but internally it uses 
+an event based architecture, so AOP code is limited to an event dispatcher.
+TestPlayer supports AspectJ and AspectWerkz to capture dynamic information 
+before and after each public methods. AspectJ and AspectWerkz supports both
+compile time and runtime weaving. TestPlayer uses runtime weaving by default,
+because it requires no changes to the application. The event dispatcher 
+listens for aspect notification and converts method information such as 
+signature, parameters and return types into an event and and fires the 
+event to the plugins. The plugins then generate artifacts as designed such 
+as unit tests, regression data, documentation, etc.
+
+<a name="#started">
+<h4>Getting Started</h4></a>
+
+
+<a name="#conclusion">
+<h4>Conclusion</h4></a>
+
+
+<a name="#references">
+<h4>References</h4></a>
+
+
+</body>
+
+</html>

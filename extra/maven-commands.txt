@@ -1,0 +1,30 @@
+http://maven.apache.org/guides/getting-started/index.html
+http://maven.apache.org/reference/plugins/aspectj/
+
+mvn plugin:download -DgroupId=maven -DartifactId=maven-aspectj-plugin -Dversion=1.2
+mvn archetype:create -DgroupId=com.plexobject.testplayer -DartifactId=TestPlayer
+
+mvn archetype:create -DgroupId=com.plexobject.mini -DartifactId=mini
+mvn archetype:create -DgroupId=gnu.cajo -DartifactId=cajo
+mvn archetype:create -DgroupId=com.sun.j2ee.blueprints -DartifactId=petstore
+
+
+
+mvn compile
+mvn test
+mvn test-compile
+mvn package
+mvn install
+mvn site
+
+src/main/resources are added to the jar
+Use filters in settings.xml to filter resources 
+mvn archetype:create -DgroupId=com.plexobject.testplayer -DartifactId=TestPlayer -DarchetypeGroupId=org.apache.maven.archetypes -DarchetypeArtifactId=maven-archetype-site
+
+http://www.ibiblio.org/Maven2
+
+
+
+
+
+

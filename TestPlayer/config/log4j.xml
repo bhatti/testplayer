@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/'>
+
+    <appender name="DEBUG" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="testplayerlogs/debug.log"/>
+        <param name="Threshold" value="DEBUG"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                value="%d{ISO8601} %-5p %c - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="INFO" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="testplayerlogs/info.log"/>
+        <param name="Threshold" value="INFO"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                value="%d{ISO8601} %-5p %c - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="WARN" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="testplayerlogs/warn.log"/>
+        <param name="Threshold" value="WARN"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                value="%d{ISO8601} %-5p %c - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="ERROR" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="testplayerlogs/error.log"/>
+        <param name="Threshold" value="ERROR"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                value="%d{ISO8601} %-5p %c - %m%n"/>
+        </layout>
+    </appender>
+
+    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <param name="Threshold" value="ERROR"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern"
+                value="%d{ISO8601} %-5p %c - %m%n"/>
+        </layout>
+    </appender>
+
+    <logger name="org.hibernate">
+        <level value="debug"/>
+        <appender-ref ref="DEBUG"/>
+        <appender-ref ref="INFO"/>
+        <appender-ref ref="WARN"/>
+        <appender-ref ref="ERROR"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="com.plexobject.testplayer">
+        <level value="debug"/>
+        <appender-ref ref="DEBUG"/>
+        <appender-ref ref="INFO"/>
+        <appender-ref ref="WARN"/>
+        <appender-ref ref="ERROR"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+</log4j:configuration>
+

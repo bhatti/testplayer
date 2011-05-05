@@ -1,0 +1,23 @@
+<!-- =================================================================== -->
+<!-- Checkstyle - Checks java code for compliance with coding standards  -->
+<!-- =================================================================== -->
+
+<project name="checkstyle">
+  <!-- =================================================================== -->
+  <!-- checkstyle -generates checkstyle report 				   -->
+  <!-- =================================================================== -->
+  <target name="checkstyle">
+    <taskdef resource="checkstyletask.properties"
+         classpath="lib/checkstyle-all-4.0-beta6.jar"/>
+    <checkstyle config="config/sun_checks.xml"
+                    failOnViolation="false"
+                    failureProperty="checkstyle.failure">
+        <fileset dir="${src.dir}" includes="**/*.java"/>
+        <formatter type="xml" toFile="${target.dir}/checkstyle.xml" />
+    </checkstyle>
+    <style in="${target.dir}/checkstyle.xml"
+               out="${target.dir}/checkstyle.html"
+               style="config/checkstyle-noframes-sorted.xsl" />
+  </target>
+</project>
+

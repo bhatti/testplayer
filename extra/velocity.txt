@@ -1,0 +1,2 @@
+http://www.javaworld.com/javaworld/jw-12-2001/jw-1228-velocity_p.html
+http://portals.apache.org/jetspeed-1/tutorial/7/velocity.html

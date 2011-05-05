@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+                "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+<class name="com.plexobject.testplayer.MethodEntry" table="METHODS">
+    <id name="id" type="long" column="id">
+        <generator class="assigned"/>
+        <!--
+        <generator class="native"/>
+        <generator class="&idgenerator;"/>
+        -->
+    </id>
+
+    <property name="parentID" type="java.lang.Long" column="parentID"/>
+    <property name="signature" type="java.lang.String" column="signature"/>
+
+<!--
+    <property name="serializedArgs" type="com.plexobject.testplayer.dao.hibernate.BinaryBlobType" column="args"/>
+    <property name="serializedRvalue" type="com.plexobject.testplayer.dao.hibernate.BinaryBlobType" column="rvalue"/>
+    <property name="serializedException" type="com.plexobject.testplayer.dao.hibernate.BinaryBlobType" column="exception"/>
+    <property name="serializedCallee" type="com.plexobject.testplayer.dao.hibernate.BinaryBlobType" column="callee"/>
+    <property name="serializedCaller" type="com.plexobject.testplayer.dao.hibernate.BinaryBlobType" column="caller"/>
+    <property name="serializedProperties" type="com.plexobject.testplayer.dao.hibernate.BinaryBlobType" column="properties"/>
+-->
+
+    <property name="serializedArgs">
+	      <column name="ARGS" sql-type="VARCHAR(1024)"/> 
+    </property>
+    <property name="serializedRvalue">
+	      <column name="RVALUE" sql-type="VARCHAR(1024)"/> 
+    </property>
+    <property name="serializedException">
+	      <column name="EXCEPTION" sql-type="VARCHAR(1024)"/> 
+    </property>
+    <property name="serializedCallee">
+	      <column name="CALLEE" sql-type="VARCHAR(1024)"/> 
+    </property>
+    <property name="serializedCaller">
+	      <column name="CALLER" sql-type="VARCHAR(1024)"/> 
+    </property>
+    <property name="serializedProperties">
+	      <column name="PROPERTIES" sql-type="VARCHAR(1024)"/> 
+    </property>
+
+
+    <property name="depth" type="java.lang.Integer" column="depth"/>
+    <property name="sameMethodNumber" type="java.lang.Integer" column="sameMethodNumber"/>
+    <property name="timesCalled" type="java.lang.Integer" column="timesCalled"/>
+    <property name="constructor" type="java.lang.Boolean" column="constructor"/>
+    <property name="started" type="timestamp" column="started"/>
+    <property name="finished" type="timestamp" column="finished"/>
+    <property name="responseTime" type="java.lang.Long" column="elapsed"/>
+    <property name="totalResponseTime" type="java.lang.Long" column="totalElapsed"/>
+    <property name="totalMemory" type="java.lang.Integer" column="totalMemory"/>
+    <property name="freeMemory" type="java.lang.Integer" column="freeMemory"/>
+    <property name="argsSize" type="java.lang.Integer" column="argsSize"/>
+    <property name="rvalueSize" type="java.lang.Integer" column="rvalueSize"/>
+    <property name="calleeSize" type="java.lang.Integer" column="calleeSize"/>
+    <property name="callerSize" type="java.lang.Integer" column="callerSize"/>
+    <property name="propertiesSize" type="java.lang.Integer" column="propertiesSize"/>
+</class>
+</hibernate-mapping>

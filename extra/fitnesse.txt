@@ -1,0 +1,539 @@
+Usage: java fitnesse.FitNesse [-pdrleoa]
+        -p <port number> {80}
+        -d <working directory> {.}
+        -r <page root directory> {FitNesseRoot}
+        -l <log directory> {no logging}
+        -e <days> {14} Number of days before page versions expire
+        -o omit updates
+        -a {user:pwd | user-file-name} enable authentication.
+
+http://www.cs.auckland.ac.nz/~rick/FitLibrary
+
+BuildOperateCheck Three tables for each test. 
+CommonIncludes Avoid duplicate test content by creating pages that are included into tests. 
+ParameterizedIncludes Using variables and Includes together to achieve function-like behavior. 
+StaticBeforeDynamic? First check the end results, then check the in-process results. 
+OperateFunction? Column Fixtures often need a special function to perform an operation between input and output. 
+
+
+
+The wiki markup widget you use is the !path widget. The format, in wiki markup language, looks like this:
+
+!path C:\workspace\TriviaGameFitNesseExample\
+
+The Most Common Table/Fixture Styles
+ColumnFixture This is the style you may end up using most: rows of data represent inputs and expected outputs. 
+RowFixture This is good for testing queries that should return an exact set of values (order-independently). 
+ActionFixture This style allows you write a script that emulates a series of events (such as controls manipulated on a user interface). 
+Comment Tables Sometimes you want a tablular comment that is not executed as a test. 
+
+
+Less Frequently-Used Table/Fixture Styles
+RowEntryFixture A special case of ColumnFixture for processing rows of data. 
+TableFixture A fixture style that lets you create completely custom test table formats, and process them however you like. 
+CommandLineFixture A fixture that allows you to execute shell commands in multiple threads. 
+SummaryFixture A fixture that generates a report of all the tests on a page. 
+
+
+Setting up a Suite page.
+You can run all the test pages in a sub-wiki by setting the "Suite" property of a page (see Page Properties). That page will then include a "Suite" button that will execute all the test pages in that hierarchy.
+
+
+SetUp and TearDown
+Sometimes you will need to delete a test database at the end of each test in a suite, or create an empty database at the beginning of each test. Operations like this can be performed by writing special fixtures that perform these functions in their constructors. These fixtures can then be invoked in the SetUp and TearDown pages of the suite. See SetUpAndTearDownPages?.
+
+
+
+public class Game {
+  private ArrayList players;
+	
+  public Game() {
+    players = new ArrayList();
+  }
+
+  public Player addPlayer(String aPlayerName) {
+    Player aPlayer = new Player(aPlayerName);
+    players.add(aPlayer);
+    return aPlayer;
+  }
+
+  public boolean playerIsPlaying(Player aPlayer) {
+    return players.contains(aPlayer);
+  }
+
+  public int getNumberOfPlayers() {
+    return players.size();
+  }
+} 
+
+
+
+
+Managing your own types with Fit.
+Any user defined type that implements toString and parse will be managed correctly by RowFixture and ColumnFixture. The signatures of these methods are:
+String toString();
+static Object parse(String s);
+
+
+
+
+Symbols: Passing Data Between Test Tables
+Sometimes you want to pass information between test tables. Let's say you added a record to a database, and the database automatically generated a key to that record. And lets say that in another table you wanted to use that key to fetch the record back. You can use symbols for this.
+
+SaveRecordInDatabase 
+name date =key? 
+Bob today bobKey 
+Bill later billKey 
+
+In this table two records are added to the database. The keys for each record are saved in symbols named bobKey and billKey. The =key? header indicates that the output of the key() method of the fixture is to be stored in a symbol whose name is in the cell.
+
+FetchRecordsFromDatabase 
+key= fetch() name date 
+billKey true Bill later 
+bobKey true Bob today 
+
+In this table the two keys are used to fetch the database records. The key= header indicates that the value of the symbol whose name is in the cell should be stored in the key variable of the fixture.
+
+
+
+Fixtures for actions (workflow):
+^DoFixture 
+^SequenceFixture (mostly the same as ^DoFixture) 
+Fixtures for lists:
+^ArrayFixture for ordered lists 
+^SetFixture for unordered lists 
+^SubsetFixture for parts of unordered lists 
+^ParamRowFixture to simplify the use of RowFixture with other FitLibrary fixtures 
+Fixture for calculations:
+^CalculateFixture 
+Fixture for set up:
+^SetUpFixture 
+Fixture for testing grids
+^GridFixture 
+^ImageFixture is a subclass of ^GridFixture 
+Fixture for comparing files and directories
+^FileCompareFixture 
+
+
+
+Seeing How Long ActionFixture Actions Take: TimedActionFixture
+
+
+package rent;
+import prs.Duration;
+import prs.Rates;
+import fit.Fixture;
+
+/*
+ * @author Rick Mugridge 21/07/2004
+ * Copyright (c) 2004 Rick Mugridge, University of Auckland, NZ
+ * Released under the terms of the GNU General Public License version 2 or later
+.
+ */
+
+/**
+ *
+ */
+public class CalculateRefund2 extends fitlibrary.DoFixture {
+        public Fixture refundDollarPerHourPerDayPerWeek(Rates rates) {
+                return new Refund(rates);
+        }
+        public Fixture refundDollarPerHourPerDayPerWeek(Money hourly, Money dail
+y, Money weekly) {
+                return new Refund(new Rates(hourly,daily,weekly));
+        }
+        public class Refund extends fitlibrary.CalculateFixture {
+                private Rates rates;
+
+                public Refund(Rates rates) {
+                        this.rates = rates;
+                }
+                public Money refundPaidTimeActualTime(Duration paid, Duration ac
+tual) {
+                        return rates.forPeriod(paid).minus(rates.forPeriod(actua
+l));
+                }
+                public Object parse(String s, Class type) throws Exception {
+                        if (type == Duration.class)
+                            return Duration.parse(s);
+                        return super.parse(s, type);
+                }
+        }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The software needed to manage the customers and accounts of the First National Piggy Bank is simple and straightforward. The bank has customers and customers can have any number of accounts that they use to hold and access their money. Funds can be deposited, withdrawn, or transfered in between accounts of the same customer.
+Customer Name Business Rules
+
+Let's start off by defining tests for the business rules of a bank customer. As far as the bank is concerned, customers are identifiable by name. In order for a customer to be tracked by the system, the customer's name must be known. For this business rule we create a table and ColumnFixture called "ValidateCustomerName".
+ValidateCustomerName
+customer name 	valid()
+	error
+Mario 	true
+
+This simple table sets the conditions for testing business rules. The cell in the first row of the table identifies the fixture class that Fit should look for when it tries to run this test. At test execution time, Fit will create an instance of the ValidateCustomerName fixture class and for each row in the table, pass whatever value is specified in the customer name column to a field in the ValidateCustomerName instance, call the valid() method in that instance and compare what is returned from that method with what appears in the cell for that row and column.
+
+The code for the ValidateCustomerName fixture is equally simple.
+
+import jnb.Bank;
+
+public class ValidateCustomerName extends fit.ColumnFixture {
+    private Bank systemUnderTest = new Bank();
+    public String customerName;
+
+    public boolean valid() {
+        systemUnderTest.addNewCustomer(customerName);
+        return true;
+    }
+}
+
+This class extends fit.ColumnFixture and defines a public String field customerName as well as a method valid(), which correspond to the two column headings in the second row of the table shown above. All ColumnFixture tables follow the same pattern:
+
+    * The first column of the first row of the table specifies the Fixture class that will be used to the execute the table at runtime.
+    * The second row of the table defines public fields and methods from the Fixture class for the table. Fit determines whether columns in the second row represent fields or methods in the target fixture class by the existence of parentheses '()' at the end of the text string.
+    * Separated words in the second row of the table must be matched by camel-cased fields and methods in the Fixture class. In the above table, customer name corresponds to the customerName public field in the ValidateCustomerName class. The table could also use customerName as the column heading or CustomerName() (in which case, the public field would be replaced by a public method of the same name in the fixture code), but these seem less "readable" and more code-like which doesn't always appeal to customers.
+    * Fit ignores any formatting applied to table cells; italicized, bold, or underlined text can be used to highlight important rows or values in the table without affecting Fit's ability to execute the test.
+
+Fit executes tests one table row at a time, from left to right column order. According to the first test values row in the ValidateCustomerName table, Fit will pass an empty (null) value to the customerName field, call the valid() method, and expect the method call to error (throw an Exception of some kind). error is a special keyword in Fit; when used in a method call column it tells Fit to expect an exception to be thrown. The absence of an exception thrown by the method causes a comparison failure for the cell (the cell appears red instead of green in the test report).
+Running Fit tests
+
+Fit tests can be run using the fit.FileRunner class, which expects a path to the test file and a path name for a file it will create for the test report.
+
+java -cp fit.jar;. fit.FileRunner <input_test_path> <output_report_path>
+
+When the test for this table executes, the cells representing expected outcomes are shaded green, red, yellow, or gray; green means that expected and actual values matched, red means they didn't match (in which case expected and actual appear in the cell), yellow indicates that an unexpected error/exception was thrown (a stacktrace appears in the cell), and gray means that the field or method is not implemented in the Fixture class or that the cell was ignored by Fit.
+ValidateCustomerName
+customer name 	valid()
+null 	error
+Mario 	true
+
+null appears in the first test cell below, even though the cell in the test table was blank. Fit implicitly uses the last value of a public fixture field if no value is specified for the executing test row in the test table. When this happens, Fit displays the implicitly used input value as shaded text in the test report table. Since the first input cell in the test table was blank, there was no previous value for the customerName field, so null was used.
+Adding Bank Customers
+
+Next, let's focus on the business rules for adding customers to the banking system. Adding a new customer includes entering their name and creating any number of accounts and starting balances. The system needs to keep track of all accounts established for a customer as well as calculate the cumulative (total) balance for all accounts belonging to the customer. We could specify rules for interest bearing accounts or accounts that require a minimum balance to avoid a penalty, but for this example the rules will be kept simple.
+
+The process of adding customers and creating their accounts follows a sequence of steps that we will capture using another type of fixture called an ActionFixture. Unlike the ColumnFixture where series of inputs and expected outputs are grouped together by columns, the ActionFixture tables are supposed to represent a sequence of interactions with a metaphorical "device", which represents the interface to the system under test. ActionFixture tables support four kinds of interactions, specified by the keywords start, enter, check and press.
+fit.ActionFixture
+start 	CustomerBankingActions
+enter 	customer 	Donald Trump
+check 	customer total balance 	$0.00
+enter 	account 	checking
+enter 	starting balance 	$10.00
+press 	create account
+check 	accounts 	checking
+check 	customer total balance 	$10.00
+enter 	account 	savings
+enter 	starting balance 	$25.00
+press 	create account
+check 	accounts 	checking, savings
+check 	customer total balance 	$35.00
+
+The start keyword tells the framework to create an instance of the Fixture class specified in the second cell of the second row of the table (CustomerBankingActions, above). enter, check, and press correspond to write (to a field or method), read (from a field or method), and call (methods with no return value) operations on the instance created by the start. In ActionFixture tables, each check will result in a comparison of the value specified in the third cell of the row with the value of the field or method matching the name in the second cell of the row.
+
+import jnb.Account;
+import jnb.Bank;
+import jnb.Customer;
+import jnb.Money;
+
+import java.util.Collection;
+
+public class CustomerBankingActions extends fit.Fixture {
+    private Bank systemUnderTest;
+    private Customer customer;
+    private String accountID;
+    private Money startingBalance;
+
+    public void customer(String customerName) {
+        this.customer = getCustomer(customerName);
+    }
+
+    private Customer getCustomer(String customerName) {
+        final Bank bank = getSystemUnderTest();
+        final List customerList = bank.getCustomers(customerName);
+        if (customerList.size() == 0) {
+            return bank.addNewCustomer(customerName);
+        }
+        return (Customer)customerList.get(0);
+    }
+
+    public Account[] accounts() {
+        final Collection accounts = customer.getAccounts();
+        return (Account[])accounts.toArray(new Account[accounts.size()]);
+    }
+
+    public void account(String accountID) {
+        this.accountID = accountID;
+    }
+
+    public void startingBalance(Money money) {
+        this.startingBalance = money;
+    }
+
+    public void createAccount() {
+        this.getSystemUnderTest().addCustomerAccount(customer, accountID, startingBalance);
+    }
+
+    public Money customerTotalBalance() {
+        return this.customer.getBalance();
+    }
+
+    public Object parse(String s, Class type) throws Exception {
+        if (Account.class.isAssignableFrom(type)) {
+            return customer.getAccount(s);
+        } else if (Money.class.isAssignableFrom(type)) {
+            return new Money(s);
+        }
+        return super.parse(s, type);
+    }
+
+    private Bank getSystemUnderTest() {
+        if (systemUnderTest == null) {
+            systemUnderTest = TestBank.systemUnderTest == null ? new Bank() : TestBank.systemUnderTest.bank;
+        }
+        return systemUnderTest;
+    }
+
+    public void transferFrom(Account transferFrom) {
+        this.transferFromAccount = transferFrom;
+    }
+
+    public void transferTo(Account transferTo) {
+        this.transferToAccount = transferTo;
+    }
+
+    public void transferAmount(Money amount) {
+        this.transferAmount = amount;
+    }
+
+    public void transactTransfer() throws InsufficientFundsException, InvalidTransactionException {
+        this.transferToAccount.transferFunds(transferFromAccount, transferAmount);
+    }
+}
+
+There are a number of details from the implementation of the CustomerBankingActions fixture that merit explanation. Unlike the ValidateCustomerName class that must descend from fit.ColumnFixture, CustomerBankingActions extends the base fixture class fit.Fixture (rather than extending fit.ActionFixture as one might expect). fit.ActionFixture interacts with other Fixture instances via the enter, check, and press operations. The actor (the class specified in the cell after the start) must be a subclass of fit.Fixture because ActionFixture needs to access an overridden method called parse() to handle type conversion for values specified in table cells.
+
+For example, the first check operation in the CustomerBankingActions table is supposed to compare the value "$0.00" with whatever is returned by a method called customerTotalBalance(), which Fit expects to find in the CustomerBankingActions class. According to the code above, that method returns an object of type jnb.Money, which is a domain class from the bank application. Behind the scenes, Fit uses reflection on the CustomerBankingActions class to find the customerTotalBalance() method and queries the class of its return type. Next Fit calls parse() on the actor for this table, passing in the String value from the table cell (in this case "$0.00") and the class of the return type of the customerTotalBalance() method (jnb.Money). The Money object returned by parse() is compared via its equals() method with whatever is return by the customerTotalBalance() method; if the two are equal, the comparison succeeds and the cell appears green in the test report,
+check 	customer total balance 	$0.00
+
+otherwise the cell will be red and display both the expected and actual values determined at runtime.
+check 	customer total balance 	$135.00 expected $35.00 actual
+
+The real power of this capability is in allowing Fit tests to utilize domain objects from the application under test, enabling complex equality comparisons in a single step. Here is the same table from the test report:
+fit.ActionFixture
+start 	CustomerBankingActions
+enter 	customer 	Donald Trump
+check 	customer total balance 	$0.00
+enter 	account 	checking
+enter 	starting balance 	$10.00
+press 	create account
+check 	accounts 	checking
+check 	customer total balance 	$10.00
+enter 	account 	savings
+enter 	starting balance 	$25.00
+press 	create account
+check 	accounts 	checking, savings
+check 	customer total balance 	$35.00
+
+In addition to handling arbitrary types, Fit also supports arrays of objects. The accounts() method in CustomerBankingActions returns an array of Account objects, which are expressed in the test table as a series of values separated by commas (see the last check accounts in the test table).
+Performing Account Transactions
+
+As a final example, let's look at a third type of fixture, the RowFixture, as well as how to combine multiple tables in a single test. A test to exercise the business rules of standard deposit, withdrawal, and transfer transactions is needed. Those rules are as follows:
+
+    * Account deposits must be in amounts (money) greater than $0.
+    * Withdrawal amounts must not be greater than the balance in the account from which money is being withdrawn.
+    * Fund transfers can only be done between two accounts belonging to the same customer and amounts must adhere to the rules established for deposits and withdrawals.
+
+Failure of any of these business rules must leave the account in its initial (pre-transaction) state with regard to its balance.
+
+The following series of tables are all part of the same test. Some cells appear shaded because the tables are from the report generated after the test run. Test tables are executed in the order in which they appear in the file.
+
+Some Fit tables can share the state of their fixtures with each other; ActionFixture tables can use the actors created by other tables within the same test (as is seen in tables 2, 5, and 8 below). The first two tables setup conditions for the rest of the test by creating a utility fixture called TestBank that will hold a reference to a jnb.Bank object used by other fixtures in the test, then creating a CustomerBankingActions fixture and using it to add a bank customer and account to the system.
+
+1. Setup the system
+fit.ActionFixture
+start 	TestBank
+
+2. Create a customer with a checking account
+fit.ActionFixture
+start 	CustomerBankingActions
+enter 	customer 	Sam Walton
+enter 	account 	checking
+enter 	starting balance 	$100.00
+press 	create account
+
+3. List all accounts in the bank
+This next table uses a RowFixture to compare a list of domain objects from the banking application against values expected by the test. The code for the CustomersAccountList fixture shows two required facets of RowFixtures, a Object[] query() method for returning the set of domain objects that will be compared to rows in the table, and a Class getTargetClass() method that tells Fit the type of object that will be returned by query() (in this case, instances of an inner class called BankAccount). As with all other types of fixtures, Fit is able to compare values from table cells with instances of application domain objects because CustomersAccountList implements a parse() method, which is responsible for converting String values into objects of a particular class. The column headings (from the second row) in the CustomersAccountList table refer to public fields in the target class (BankAccount) for this RowFixture. Behind the scenes, Fit uses reflection on the class reference returned by getTargetClass() to determine the class type for each of the columns in the RowFixture table.
+
+Though it may seem awkward to expose public fields in a class, fixtures exist to connect tables to the system under test and are not themselves actually part of the real application. The column headings id, customer and balance appear as public fields (of type String) in the CustomersAccountList.BankAccount class, but they could just as easily have been methods, in which case the table would refer to them as: id(), customer() and balance(). As well, BankAccount need not have been an inner class of the CustomersAccountList class but rather a top-level class (or even an interface - in which case the public fields would have to have been methods).
+
+At this point, the bank only has one customer. This list appears again (with two customers) at the end of step 8 in this test.
+CustomersAccountList
+id 	customer 	balance
+checking 	Sam Walton 	$100.00
+
+import jnb.Account;
+import jnb.Customer;
+import jnb.Money;
+
+import java.util.*;
+
+public class CustomersAccountList extends fit.RowFixture {
+    public Object[] query() throws Exception
+    {
+        final List customers = TestBank.systemUnderTest.bank.getCustomers();
+
+        return getBankAccounts(customers);
+
+    }
+
+    protected Object[] getBankAccounts(final List customers)
+    {
+        List bankAccounts = new ArrayList();
+        for(Iterator iter = customers.iterator(); iter.hasNext(); ) {
+            Customer customer = (Customer) iter.next();
+            final Collection accounts = customer.getAccounts();
+            for(Iterator accountsIter = accounts.iterator(); accountsIter.hasNext(); ) {
+                final BankAccount bankAccount = new BankAccount((Account)accountsIter.next());
+                bankAccounts.add(bankAccount);
+            }
+        }
+
+        return bankAccounts.toArray();
+    }
+
+    public Class getTargetClass()
+    {
+        return BankAccount.class;
+    }
+
+    public Object parse(String s, Class type) throws Exception
+    {
+        if (Money.class.isAssignableFrom(type)) {
+            return new Money(s);
+        } else if (Customer.class.isAssignableFrom(type)) {
+            return new Customer(s);
+        }
+        return super.parse(s, type);
+    }
+
+    public static class BankAccount {
+        public final String id;
+        public final Customer customer;
+        public final Money balance;
+
+        public BankAccount(Account account)
+        {
+            this.id = account.getId();
+            this.customer = account.getCustomer();
+            this.balance = account.getBalance();
+        }
+    }
+}
+
+4. Check rules that prevent zero-value deposits as well as maintain the original account balance after an invalid transaction
+The Deposit table is implemented as a ColumnFixture. A link to the source code for this fixture, the application classes, and all HTML files for this article can be found in the resources section of this article.
+Deposit
+customer 	account 	amount 	deposit successful() 	balance()
+Sam Walton 	checking 	$10.00 	true 	$110.00
+Sam Walton 	checking 	$0.00 	false 	$110.00
+
+5. Create a savings account, then transfer money from checking to savings
+This ActionFixture table implicitly uses the same actor (CustomerBankingActions) from the last ActionFixture table (#2 above).
+fit.ActionFixture
+enter 	account 	savings
+enter 	starting balance 	$200.00
+press 	create account
+enter 	transfer from 	checking
+enter 	transfer to 	savings
+enter 	transfer amount 	$50.00
+press 	transact transfer
+check 	customer total balance 	$310.00
+
+6. View all account details for Sam Walton
+This RowFixture table is a variation from the CustomersAccountList table (#3 above). That table dealt with all customers in the system, but this table provides the name of a specific customer, demonstrating how tables can pass parameters to their fixture implementations in cells appearing after the fixture name. The implementation of CustomerNameAccountList shows how the parameters passed by the table are accessed in the fixture via the args array inherited from fit.Fixture.
+CustomerNameAccountList 	Sam Walton
+id 	balance
+checking 	$60.00
+savings 	$250.00
+
+public class CustomerNameAccountList extends CustomersAccountList {
+
+    public Object[] query() throws Exception
+    {
+        return getBankAccounts(TestBank.systemUnderTest.bank.getCustomers(args[0]));
+    }
+}
+
+7. Check rules that prevent withdrawal of more funds than appear in the account
+The Withdrawal table (like the Deposit table) is implemented as a ColumnFixture.
+Withdrawal
+customer 	account 	amount 	withdrawal successful() 	balance()
+Sam Walton 	checking 	$10.00 	true 	$50.00
+Sam Walton 	checking 	$60.00 	false 	$50.00
+Sam Walton 	checking 	$50 	true 	$0.00
+
+8. Create a second customer and confirm that transferring money between accounts from different customers is not allowed
+The last press operation in this table is shaded in yellow and shows a stack trace from an exception thrown because the funds transfer attempt broke the business rule enforced by the system.
+fit.ActionFixture
+enter 	customer 	Warren Buffet
+enter 	account 	money market
+enter 	starting balance 	$100.00
+press 	create account
+enter 	transfer from 	money market
+enter 	customer 	Sam Walton
+enter 	transfer to 	checking
+enter 	transfer amount 	$50.00
+press
+
+jnb.InvalidTransactionException: Cannot perform transfers between different customers
+	at jnb.Account.transferFunds(Account.java:81)
+	at CustomerBankingActions.transactTransfer(CustomerBankingActions.java:88)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:324)
+	at fit.ActionFixture.press(Unknown Source)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:324)
+	at fit.ActionFixture.doCells(Unknown Source)
+	at fit.Fixture.doRow(Unknown Source)
+	at fit.Fixture.doRows(Unknown Source)
+	at fit.Fixture.doTable(Unknown Source)
+	at fit.Fixture.interpretFollowingTables(Unknown Source)
+	at fit.Fixture.interpretTables(Unknown Source)
+	at fit.Fixture.doTables(Unknown Source)
+	at fit.FileRunner.process(Unknown Source)
+	at fit.FileRunner.run(Unknown Source)
+	at DirectoryRunner$MyFileRunner.main(DirectoryRunner.java:55)
+	at DirectoryRunner.runTestsInDirectory(DirectoryRunner.java:32)
+	at DirectoryRunner.main(DirectoryRunner.java:15)
+
+	transact transfer
+
+This last table verifies that all the account balances match what they were before the failed funds transfer.
+CustomersAccountList
+id 	customer 	balance
+checking 	Sam Walton 	$0.00
+savings 	Sam Walton 	$250.00
+money market 	Warren Buffet 	$100.00
+Notes and Closing
+
+Fit is released under the Gnu Public License (GPL) and has already been extended by two notable projects (that are themselves also open source): FitNesse, which is a Wiki-based Fit execution server, and FitLibrary which adds useful fixtures (the DoFixture) and utilities (support for Microsoft Excel spreadsheet-based Fit tests and running all tests in a directory hierarchy). Fit was originally written in Java, but has been ported to many other programming languages including C++, dotNet, Perl, Python, and others.
+
+This article has attempted to use a simple example to illustrate how to use Fit to test application business rules. The sample application had no user interface, in fact the authors of the framework recommend business rules testing that doesn't interact with the system via the user interface but rather writing test fixtures that make direct calls into application entry points. The reasoning is that frequent UI changes might make functional tests fragile or force the tests to follow whatever interaction sequence is provided by the UI thereby making the tests less concise. There is a lot of merit to these arguments, as is there to the notion that true functional testing exercises the entire application in the same way that a user might to ensure that all application behaviors (and the business rules they enforce) are externally observable from the user interface. Open source tools like Jemmy (for interacting with Swing user interfaces) and jWebUnit (for interacting with web user interfaces) simplify the UI interaction layer for functional tests; test fixtures can use these kinds of utility libraries to drive the running application without needing to "expose" APIs that side-step the user interface.
+

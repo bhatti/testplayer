@@ -1,0 +1,2 @@
+java -jar sequence.jar --headless filename
+com.zanthan.sequence.Main("--headless", "filename")

@@ -1,0 +1,41 @@
+<!-- =================================================================== -->
+<!--         Generates various QA/Metrics collection reports 		 -->
+<!-- =================================================================== -->
+
+<project name="metrics-reports">
+  <import file="property-adapter.xml"/>
+  <import file="pmd.xml"/>
+  <import file="checkstyle.xml"/>
+  <import file="jdepend.xml"/>
+  <import file="cobertura.xml"/>
+  <property name="report.dirs" value="reports"/>
+
+  <!-- =================================================================== -->
+  <!--         Generates various QA/Metrics collection reports 		   -->
+  <!-- =================================================================== -->
+    <target name="reports" depends="compile" description="Run Quality Metrics Reports.">
+      <mkdir dir="${report.dirs}"/>
+      <mkdir dir="${report.dirs}/findbugs"/>
+      <antcall target="findbugs">
+          <param name="target.dir" value="${report.dirs}/findbugs"/>
+      </antcall>
+      <mkdir dir="${report.dirs}/checkstyle"/>
+      <antcall target="checkstyle">
+          <param name="build.dir" value="${stage}"/>
+          <param name="target.dir" value="${report.dirs}/checkstyle"/>
+      </antcall>
+      <mkdir dir="${report.dirs}/cobertura"/>
+      <antcall target="cobertura">
+          <param name="build.dir" value="${stage}"/>
+          <param name="target.dir" value="${report.dirs}/cobertura"/>
+      </antcall>
+      <mkdir dir="${report.dirs}/pmd"/>
+      <antcall target="pmd">
+          <param name="target.dir" value="${report.dirs}/pmd"/>
+      </antcall>
+      <antcall target="javadoc">
+          <param name="javadoc.dir" value="${report.dirs}/javadoc"/>
+      </antcall>
+    </target>
+</project>
+

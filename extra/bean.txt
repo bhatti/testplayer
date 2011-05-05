@@ -1,0 +1,42 @@
+
+AspectJ does some things a bit differently; here’s what the around advice body looks like in the AspectJ version:
+
+void around(JavaBean bean) : setters(bean) {
+     FieldSignature fieldSig = (FieldSignature) thisJoinPoint.getSignature();
+     Field field = fieldSig.getField();
+     try {
+          Object oldValue = field.get(bean);
+          proceed(bean);
+          Object newValue = field.get(bean);
+          bean.firePropertyChange(field.getName(), oldValue,newValue);
+     }
+     catch(Exception e) {
+          e.printStackTrace();
+     }
+}
+
+Notice how we didn’t need to cast anthing to a JavaBean? In AspectJ, we can have the pointcut do that for us:
+
+pointcut withinConstructor() : withincode((@Observable *).new(..));
+
+pointcut setters(JavaBean bean): target(bean) && set(* (@Observable *).*)
+            && withincode(* @Observable *.set*(..)
+            && !withinConstructor() && !set(@Silent *(@Observable *).*); 
+
+
+declare parents : (@Observable *) implements JavaBean;
+
+This line says that any type marked @Observable should implement the JavaBean interface. For simple marker interfaces like Serializable, this is all you’d need to do. However, since the JavaBean interface requires several methods to be implemented, the aspect must now also provide the default implementation. To implement the interface methods, we add the following lines:
+
+public void JavaBean.addPropertyChangeListener(PropertyChangeListener listener) {
+     pcs.addPropertyChangeListener(listener);
+}
+
+By prefixing the method names with that of the interface, the aspect now provides the full implementation of a JavaBean to the advised classes. So essentially, your aspect now becomes the implementation of that interface.
+
+Accomplishing the same thing using AspectJ’s annotation-style development has been elusive task. One might think something like this might do the trick:
+
+
+@DeclareParents(value="@Observable *",defaultImpl=JavaBeanImpl.class)
+private JavaBean javaBean;
+

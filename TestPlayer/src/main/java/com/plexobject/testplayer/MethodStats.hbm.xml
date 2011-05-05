@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+                "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+<class name="com.plexobject.testplayer.MethodStats" table="METHODSTATS">
+    <id name="signature" type="java.lang.String" column="signature">
+        <generator class="assigned"/>
+    </id>
+
+    <property name="timesCalled" type="java.lang.Long" column="timesCalled"/>
+    <property name="totalResponseTime" type="java.lang.Long" column="totalResponseTime"/>
+    <property name="totalArgsSize" type="java.lang.Long" column="totalArgsSize"/>
+    <property name="totalRvalueSize" type="java.lang.Long" column="totalRvalueSize"/>
+    <property name="constructor" type="java.lang.Boolean" column="constructor"/>
+    <property name="created" type="timestamp" column="created"/>
+</class>
+</hibernate-mapping>
